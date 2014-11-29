@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root>
+	<web id="9f56c3fc-b77d-48ee-8d26-69dd4e25c1d1" name="最高人民法院失信人名单" domain="http://www.court.gov.cn">
+		<browse name="全国法院失信被执行人名单(自然人)" domain="http://shixin.court.gov.cn">
+			<list method="get" url="/personMore.do"></list>
+			<var name="pagecount" method="jquery" key="div.person_more > div > a[href]" index="1" attribute="onclick">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="pagecount">
+				<page method="post" url="/personMore.do">
+					<form>
+						<param name="currentPage">$pageid</param>
+					</form>
+				</page>
+				<var name="idList" method="jquery" key="table.Resultlist a[title]" attribute="id"></var>
+				<foreach item="id" list="idList">
+					<detail method="get" url="/detail">
+						<string>
+							<param name="id">$id</param>
+						</string>
+					</detail>
+					<data text="$detail" method="json" key="."></data>
+				</foreach>
+			</for>
+		</browse>
+		<browse name="全国法院失信被执行人名单(法人或其他组织)" domain="http://shixin.court.gov.cn">
+			<list method="get" url="/unitMore.do"></list>
+			<var name="pagecount" method="jquery" key="div.unit_more > div > a[href]" index="1" attribute="onclick">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="pagecount">
+				<page method="post" url="/unitMore.do">
+					<form>
+						<param name="currentPage">$pageid</param>
+					</form>
+				</page>
+				<var name="idList" method="jquery" key="table.Resultlist a[title]" attribute="id"></var>
+				<foreach item="id" list="idList">
+					<detail method="get" url="/detail">
+						<string>
+							<param name="id">$id</param>
+						</string>
+					</detail>
+					<data text="$detail" method="json" key="."></data>
+				</foreach>
+			</for>
+		</browse>
+		<query name="被执行人信息查询" domain="http://zhixing.court.gov.cn">
+			<search method="post" url="/search">
+				<form>
+					<param name="searchCourtName">全国法院（包含地方各级法院）</param>
+					<param name="selectCourtId">1</param>
+					<param name="selectCourtArrange">1</param>
+					<param name="pname">?</param>
+					<param name="cardNum">?</param>
+				</form>
+			</search>
+			<var name="pagecount" text="$response" method="digit" index="1"></var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="post" url="/search/search">
+					<form>
+						<param name="currentPage">$pageid</param>
+						<param name="selectCourtId">1</param>
+						<param name="selectCourtArrange">1</param>
+						<param name="pname">?</param>
+						<param name="cardNum">?</param>
+					</form>
+				</page>
+				<var name="idList" method="jquery" key="a.View" attribute="id"></var>
+				<foreach item="id" list="idList">
+					<detail method="get" url="/search/detail">
+						<string>
+							<param name="id">$id</param>
+						</string>
+					</detail>
+					<data text="$detail" method="json" key="."></data>
+				</foreach>
+			</for>
+		</query>
+		<browse name="裁判文书(民事案件)" domain="http://www.court.gov.cn">
+			<list method="get" url="/zgcpwsw/mshz/"></list>
+			<var name="pagecount" text="$list" method="xml" key="div[ArtPLink] > a[href]" index="9" attribute="href">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="get" url="/zgcpwsw/mshz/index_%pageid%.htm"></page>
+				<var name="urlList" text="$page" method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></var>
+				<foreach item="url" list="urlList">
+					<detail method="get" url="$url"></detail>
+					<data method="xml" key="div[ws]"></data>
+				</foreach>
+			</for>
+		</browse>
+		<browse name="裁判文书(刑事案件)" domain="http://www.court.gov.cn">
+			<list method="get" url="/zgcpwsw/xshz/"></list>
+			<var name="pagecount" text="$list" method="xml" key="div[ArtPLink] > a[href]" index="9" attribute="href">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="get" url="/zgcpwsw/xshz/index_%pageid%.htm"></page>
+				<var name="urlList" text="$page" method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></var>
+				<foreach item="url" list="urlList">
+					<detail method="get" url="$url"></detail>
+					<data method="xml" key="div[ws]"></data>
+				</foreach>
+			</for>
+		</browse>
+		<browse name="裁判文书(行政案件)" domain="http://www.court.gov.cn">
+			<list method="get" url="/zgcpwsw/xzhz/"></list>
+			<var name="pagecount" text="$list" method="xml" key="div[ArtPLink] > a[href]" index="9" attribute="href">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="get" url="/zgcpwsw/xzhz/index_%pageid%.htm"></page>
+				<var name="urlList" text="$page" method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></var>
+				<foreach item="url" list="urlList">
+					<detail method="get" url="$url"></detail>
+					<data method="xml" key="div[ws]"></data>
+				</foreach>
+			</for>
+		</browse>
+		<browse name="裁判文书(知识产权)">
+			<list method="get" url="/zgcpwsw/zscqhz/"></list>
+			<var name="pagecount" text="$list" method="xml" key="div[ArtPLink] > a[href]" index="9" attribute="href">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="get" url="/zgcpwsw/zscqhz/index_%pageid%.htm"></page>
+				<var name="urlList" text="$page" method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></var>
+				<foreach item="url" list="urlList">
+					<detail method="get" url="$url"></detail>
+					<data method="xml" key="div[ws]"></data>
+				</foreach>
+			</for>
+		</browse>
+		<browse name="裁判文书(赔偿案件)">
+			<list method="get" url="/zgcpwsw/pchz/"></list>
+			<var name="pagecount" text="$list" method="xml" key="div[ArtPLink] > a[href]" index="9" attribute="href">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="get" url="/zgcpwsw/pchz/index_%pageid%.htm"></page>
+				<var name="urlList" text="$page" method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></var>
+				<foreach item="url" list="urlList">
+					<detail method="get" url="$url"></detail>
+					<data method="xml" key="div[ws]"></data>
+				</foreach>
+			</for>
+		</browse>
+		<browse name="裁判文书(执行案件)">
+			<list method="get" url="/zgcpwsw/zxhz/"></list>
+			<var name="pagecount" text="$list" method="xml" key="div[ArtPLink] > a[href]" index="9" attribute="href">
+				<select method="digit" index="0"></select>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="get" url="/zgcpwsw/zxhz/index_%pageid%.htm"></page>
+				<var name="urlList" text="$page" method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></var>
+				<foreach item="url" list="urlList">
+					<detail method="get" url="$url"></detail>
+					<data method="xml" key="div[ws]"></data>
+				</foreach>
+			</for>
+		</browse>
+	</web>
+	
+	<web id="64848e56-a6be-4252-b603-0a57f2c0a090" name="浙江信用网" domain="http://www.zjcredit.gov.cn">
+		<template name="person">
+			<list method="get" url="/zjcreditweb/html/personList.jsp">
+				<string>
+					<param name="tid">$tableId</param>
+				</string>
+			</list>	
+			<var name="pagecount" text="$list" method="xml" key="span.default_pgTotalPage" attribute="text"/>
+			<var name="recordcount" text="$list" method="xml" key="span.default_pgSearchInfo" attribute="text" >
+				<select method="digit" index="0"/>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="post" url="/zjcreditweb/html/personProxy.jsp">
+					<query>
+						<param name="startrecord">($pageid-1)*20</param>
+						<param name="endrecord">$pageid*20</param>
+						<param name="perpage">20</param>
+						<param name="totalrecord">$recordcount</param>
+					</query>
+					<form>
+						<param name="id">$tableId</param>
+					</form>
+				</page>
+				<var name="idList" text="$page" method="javascript" attribute="dataStore">
+					<select method="split" key="$" index="1"/>
+				</var>
+				<foreach item="id" list='$idList'>
+					<detail method="post" url="/zjcreditweb/html/personDetail.jsp">
+						<form>
+							<param name="tableId">$tableId</param>
+							<param name="cId">$id</param>
+						</form>
+					</detail>
+					<data text="$detail" method="xml" key="table.table" index="0"/>
+				</foreach>
+			</for>
+		</template>
+		<template name="enterprise">
+			<list method="get" url="/zjcreditweb/html/promptsList.jsp">
+				<string>
+					<param name="id">$tableId</param>
+				</string>
+			</list>	
+			<var name="pagecount" text="$list" method="xml" key="span.default_pgTotalPage" attribute="text"/>
+			<var name="recordcount" text="$list" method="xml" key="span.default_pgSearchInfo" attribute="text" >
+				<select method="digit" index="0"/>
+			</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page method="post" url="/zjcreditweb/html/promptsProxy.jsp">
+					<query>
+						<param name="startrecord">($pageid-1)*20</param>
+						<param name="endrecord">$pageid*20</param>
+						<param name="perpage">20</param>
+						<param name="totalrecord">$recordcount</param>
+					</query>
+					<form>
+						<param name="id">$tableId</param>
+					</form>
+				</page>
+				<var name="idList" text="$page" method="javascript" attribute="dataStore">
+					<select method="split" key="$" index="1"/>
+				</var>
+				<foreach item="id" list='$idList'>
+					<detail method="post" url="/zjcreditweb/html/promptsDetail.jsp">
+						<form>
+							<param name="tableId">$tableId</param>
+							<param name="cId">$id</param>
+						</form>
+					</detail>
+					<data text="$detail" method="xml" key="table.table" index="0"/>
+				</foreach>
+			</for>
+		</template>
+		
+		<browse name="个人未履行生效裁判失信信息" template="person">
+			<param name="tableId">96CFC60C35F527A811D198BC91914AA1DCBE1E79980CBCABFA17E2D0294F345F</param>
+		</browse>
+		<browse name="职业技能证书信息" template="person">
+			<param name="tableId">352304340452A572342F92596164B1B64EA5B6205AAC89C1FC3FF9B6C8D0F99C</param>
+		</browse>
+		<browse name="人事考试违纪信息" template="person">
+			<param name="tableId">F1484791A10853BCBD82F78AAAC29C97</param>
+		</browse>
+		<browse name="单位未履行生效裁判失信信息" template="enterprise">
+			<param name="tableId">96CFC60C35F527A811D198BC91914AA1778A71FD595B1228</param>
+		</browse>
+		<browse name="企业信用等级评价信息" template="enterprise">
+			<param name="tableId">311FEF667519C6F41627DF87AE6D6922</param>
+		</browse>
+		<browse name="安全许可证信息" template="enterprise">
+			<param name="tableId">341BB83EE7ABE82F36E1958A7EFAA1A2383E8D6EE3662961</param>
+		</browse>
+		<browse name="企业信用考核结果" template="enterprise">
+			<param name="tableId">ABA986E12778CBBF5AA5359A3DF2F05BE014B50E70BCC8A5</param>
+		</browse>
+		<browse name="工商年检信息" template="enterprise">
+			<param name="tableId">089ED034B19013A38DBCB4475C6D19F59B9036E401AD23C2</param>
+		</browse>
+		<browse name="工商年检信息" template="enterprise">
+			<param name="tableId">089ED034B19013A3C59400A95953A6D76B5F52616EB861C4</param>
+		</browse>
+		<browse name="浙江省工商企业信用AAA级“守合同重信用”单位" template="enterprise">
+			<param name="tableId">089ED034B19013A3D14E61C55735E32C</param>
+		</browse>
+		<browse name="中国驰名商标" template="enterprise">
+			<param name="tableId">089ED034B19013A3817F4A89F4434B74</param>
+		</browse>
+		<browse name="浙江省知名商号" template="enterprise">
+			<param name="tableId">089ED034B19013A305F742568B987262</param>
+		</browse>
+		<browse name="年度AAA级纳税人名单和度浙江省税务信誉等级信息" template="enterprise">
+			<param name="tableId">BAA1CDF626D4E47589C0B20EF1BAB42C</param>
+		</browse>
+		<browse name="无公害水产品养殖基地信息" template="enterprise">
+			<param name="tableId">CC2E7489859EF360996A814B20DDFC4DF1AB5D97A94795FB</param>
+		</browse>
+		<browse name="药品生产企业信息" template="enterprise">
+			<param name="tableId">7CA95D7AE8DADC1C5B8D9952D1BCE535</param>
+		</browse>
+		<browse name="药品批发企业信息" template="enterprise">
+			<param name="tableId">7CA95D7AE8DADC1CD730A2D8C734A8D1</param>
+		</browse>
+		<browse name="省颁增值电信业务经营许可证信息" template="enterprise">
+			<param name="tableId">08F7D900D36DE6DDF96824BD71C5350080C482565A81BCE9</param>
+		</browse>
+		<browse name="奖励等良好行为记录" template="enterprise">
+			<param name="tableId">1717151FABB8A3F6D8CDF11A5E279767</param>
+		</browse>
+		<browse name="监督检查记录" template="enterprise">
+			<param name="tableId">1717151FABB8A3F6F7A49AA9807E52FB664ED47E8EEECC95</param>
+		</browse>
+		<browse name="行政处罚（质量违法）信息" template="enterprise">
+			<param name="tableId">1717151FABB8A3F6DF5791B09629BCF7B6D4F515C52D257C</param>
+		</browse>
+		<browse name="强制性认证信息" template="enterprise">
+			<param name="tableId">1717151FABB8A3F6D18C1BF890EC83FA</param>
+		</browse>
+		<browse name="产品质量监督抽查情况" template="enterprise">
+			<param name="tableId">1717151FABB8A3F6BA62DA2FDFF289948163DA5DED6D79CA</param>
+		</browse>
+		<browse name="行政许可信息" template="enterprise">
+			<param name="tableId">1717151FABB8A3F64F936B870B172D0897018DC4EC50A9E8</param>
+		</browse>
+		<browse name="海关企业分类管理信息" template="enterprise">
+			<param name="tableId">70CA76D111DE97793A01C8336DB72153001AE8C599C341B3</param>
+		</browse>
+		<browse name="阿里巴巴恶意拖欠贷款客户信息" template="enterprise">
+			<param name="tableId">69C02F8A7295D6AE77E4998CD8F27F35340169AE8870FB39</param>
+		</browse>
+		<browse name=" 阿里巴巴拒绝服务客户信息" template="enterprise">
+			<param name="tableId">69C02F8A7295D6AE77E4998CD8F27F3518B683FA541039D4</param>
+		</browse>
+	</web>
+
+	<web id="85c0f902-e9d3-4bae-b7cd-01abcb4cf0a4" name="无锡市房地产信息公众网" domain="http://pub.wxlife.cn">
+		<browse name="商品房备案列表">
+			<pagecount>[1-100]</pagecount>
+			<list >
+				<page name="buildList" method="get" url="/BuildList.pub">
+					<query>
+						<param name="page">?</param>
+					</query>
+					<response method="jquery" key="td[id=buildname] > a[href]" attribute="href">
+						<item name="buildInfo" method="get" url="/ifrm_BuildBasic.pub">
+							<param name="blid" method="regular" key="^BuildInfo\.pub\?blid=(\d+)" index="0"></param>
+							<data method="jquery" key="table[id=info]"/>
+						</item>
+						<list name="houseList">
+							<pagecount>[1-50]</pagecount>
+							<page method="get" url="/ifrm_HouseList.pub">
+								<query>
+									<param name="blid" method="regular" key="^BuildInfo\.pub\?blid=(\d+)" index="0"></param>
+									<param name="page">?</param>
+								</query>
+								<response method="jquery" key="table[id=info] tr a[href]" attribute="href">
+									<item name="houseInfo" method="get" url="/HouseInfo.pub">
+										<string>
+											<param name="hsid" method="regular" key="HouseInfo\.pub\?hsid=(\d+)$" index="0"/>
+										</string>
+										<data method="jquery" key="table[id=info]"/>
+									</item>
+								</response>
+							</page>
+						</list>
+					</response>
+				</page>
+			</list>
+		</browse>
+		
+		<browse name="无锡房地产开发商名单">
+			<list >
+				<pagecount>[1-50]</pagecount>
+				<page name="provList" method="get" url="/ProvList.pub">
+					<query>
+						<param name="page">?</param>
+					</query>
+					<response method="jquery" key="td[id=table_content] a[href]" attribute="href">
+						<item name="provInfo" method="get" url="/ProvInfo.pub">
+							<param name="prid" method="regular" key="^ProvInfo\.pub\?prid=(\d+)" index="0"/>
+							<data method="jquery" key="table[id=info]" index="0"></data>
+						</item>
+					</response>
+				</page>
+			</list>
+		</browse>
+		
+		<browse name="无锡房地产中介公司名单">
+			<list>
+				<pagecount>[1-20]</pagecount>
+				<page name="proxyList" method="get" url="/ProxyList.pub">
+					<query>
+						<param name="page">?</param>
+					</query>
+					<response method="jquery" key="td[id=table_content] a[href]" attribute="href">
+						<item name="proxyInfo" method="get" url="/ProxyInfo.pub">
+							<param name="pxid" method="regular" key="^ProxyInfo\.pub\?pxid=(\d+)" index="0"/>
+							<data method="jquery" key="table[id=info]"/>
+						</item>
+					</response>
+				</page>
+			</list>
+		</browse>
+	</web>
+
+	<web id="7a4bb947-ed83-4395-a965-575b5cc09ad8" name="无锡人力资源招聘网" domain="http://www.wxhrzp.com">
+		<list name="个人简历">
+			<var name="pagecount">12000</var>
+			<for item="pageid" start="1" end="$pagecount">
+				<page name="resumeList" method="post" url="/ResumeSearch">
+					<form>
+						<param name="pageIndex">?</param>
+					</form>
+					<response method="jquery" key="td.list > a[href]" attribute="href">
+						<item name="resumeDetail" >
+							<http name="getcookie" method="get" url="http://www.wxhrzp.com"></http>
+							<http name="login" method="post" url="/identity">
+								<query>
+									<param name="userName">kimzhang</param>
+									<param name="password">abcdefg</param>
+									<param name="action">login_company</param>
+								</query>
+							</http>
+							<http method="get" url="/company/cvPreview.go">
+								<param name="resumeID" method="regular" key="^company/cvPreview\.go\?resumeID=(.+)" index="0"></param>
+								<response>
+									<data method="jquery" key="div.resumeBody"/>
+									<target name="resumePhoto" type="http" method="get" url="/image/show">
+										<query>
+											<param name="uid">?</param>
+										</query>
+										<data method="base64"/>
+									</target>
+								</response>
+							</http>
+						</item>
+					</response>
+				</page>
+			</for>
+		</list>
+	</web>
+	
+	<web id="3325677f-8ee6-4887-84a8-07c1f8078749" name="江苏省工商行政管理局" domain="http://www.jsgsj.gov.cn">
+		<query name="企业信息" method="post" url="/baweb/show/sj/business_query.jsp">
+			<string>
+				<param name="flag">2</param>
+				<param name="fenceid">1</param>
+			</string>
+			<form>
+				<param name="businessName" optional="true">?</param>
+				<param name="representPeople" optional="true">?</param>
+				<param name="registeredNumber" optional="true">?</param>
+			</form>
+			<var name="regnoList" method="jquery" key="table tr[onmouseover] a[href]" attribute="href">
+				<select method="regular" key="^details\.jsp\?reg_no\=(.+)" index="0"></select>
+			</var>
+			<foreach item="regno" list="regnoList">
+				<item method="get" url="/baweb/show/sj/details.jsp">
+					<string>
+						<param name="reg_no">$regno</param>
+					</string>
+					<data method="jquery" key="table.detail"/>
+				</item>
+			</foreach>
+		</query>
+	</web>
+	
+	<web id="08ba3cef-5273-4cb7-b323-7ecf91d3acf2" name="上海市工商行政管理局" domain="http://www.sgs.gov.cn">
+		<query name="企业信息" method="post" url="/lz/etpsInfo.do?method=doSearch">
+			<form>
+				<param name="searchType">1</param>
+				<param name="keyWords">$1</param>
+			</form>
+			<var name="etpsIdList" method="xml" key="table.con a[onclick]" attribute="onclick">
+				<select method="regular" key="^viewDetail\('(.+)'\)$" index="0"></select>
+			</var>
+			<http name="getcookie" method="get" url="/lz/etpsInfo.do?method=index"></http>
+			<foreach item="etpsId" list="etpsIdList">
+				<item method="post" url="/lz/etpsInfo.do?method=viewDetail">
+					<form>
+						<param name="etpsId">$etpsId</param>
+					</form>
+					<referer>http://www.sgs.gov.cn/lz/etpsInfo.do?method=doSearch</referer>
+					<data method="xml" key="table.list" index="1"/>
+				</item>
+			</foreach>
+		</query>
+	</web>
+	
+	<web id="f95faa75-95b7-4bc0-bf25-79912bdf9c39" name="全国企业信用信息公示系统(北京)" domain="http://qyxy.baic.gov.cn/">
+		<query method="get" url="/beijing">
+			<response>
+				<http name="getCaptcha" method="get" url="/checkCodeServlet">
+					<param name="currentTimeMillis" method="xml" key="input[currentTimeMillis]" attribute="value"/>
+					<response type="jpeg" method="captcha" key="saic.beijing">
+						<http method="post" url="/gjjbj/gjjQueryCreditAction!getBjQyList.dhtml">
+							<query>
+								<param name="currentTimeMillis">?</param>
+								<param name="keyword">?</param>
+								<param name="checkCode">?</param>
+							</query>
+							<response>
+								<http name="dengjixinxi" method="get" url="/gjjbj/gjjQueryCreditAction!openEntInfo.dhtml">
+									<param name="entId">?</param>
+									<param name="entName">?</param>
+									<param name="entNo">?</param>
+									<param name="timeStamp">?</param>
+									<captchar type="saic.beijing"></captchar>
+									<data method="xml" key="div[dengjixinxi] table.detailsList" index="0"></data>
+								</http>
+								<http name="bgxx" method="get" url="/gjjbj/gjjQueryCreditAction!biangengFrame.dhtml">
+									<query>
+										<param name="ent_id">?</param>
+										<param name="clear">true</param>
+										<param name="timeStamp">?</param>
+									</query>
+									<data method="xml" key="div[touziren]"></data>
+								</http>
+								<http name="zyry" method="get" url="/gjjbj/gjjQueryCreditAction!zyryJTCYFrame.dhtml">
+									<query>
+										<param name="ent_id">?</param>
+										<param name="clear">true</param>
+										<param name="timeStamp">?</param>
+									</query>
+									<data method="xml" key="div[touziren]"></data>
+								</http>
+								<http name="xzcf" method="get" url="/gjjbj/gjjQueryCreditAction!xzcfFrame.dhtml">
+									<query>
+										<param name="ent_id">?</param>
+										<param name="clear">true</param>
+										<param name="timeStamp">?</param>
+									</query>
+									<data method="xml" key="div[touziren]"></data>
+								</http>
+							</response>
+						</http>
+					</response>
+				</http>
+			</response>
+		</query>
+	</web>
+	
+</root>
