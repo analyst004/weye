@@ -33,13 +33,13 @@ public class UrlDatabaseTest extends TestCase {
         UrlDatabase.init("10.1.1.2", 27017, "test");
         for (int  i= 1; i<=10; i++) {
 
-            CrawlRequest request = new CrawlRequest();
+            WebItem request = new WebItem();
             request.setHost("http://test.com");
             request.setPath("/test"+i);
 
-            assertFalse(UrlDatabase.exist(request));
-            UrlDatabase.write(request);
-            assertTrue(UrlDatabase.exist(request));
+
+            UrlDatabase.write("test", request);
+
         }
     }
 }

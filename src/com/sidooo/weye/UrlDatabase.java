@@ -1,8 +1,13 @@
 package com.sidooo.weye;
 
 import com.mongodb.*;
+import org.joda.time.DateTime;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,35 +22,95 @@ public class UrlDatabase {
     private static String host;
     private static int port;
     private static String dbname;
+    private static DB db;
 
     public static void init(String host, int port, String dbname) throws  Exception{
         host = host;
         port = port;
         dbname = dbname;
-        client = new Mongo(host, port);
+
+
+        MongoOptions options = new MongoOptions();
+        options.autoConnectRetry = true;
+        options.connectionsPerHost = 200;
+        options.socketTimeout = 2000;
+        options.socketKeepAlive = true;
+
+        client = new Mongo(new ServerAddress(host, port), options);
+        db = client.getDB(dbname);
+        if (db == null) {
+            throw new ClassNotFoundException(dbname + " not found");
+        }
     }
 
-    public static void write(CrawlRequest request)
-    {
-        String md5 = request.getMd5();
-        DBCollection coll = client.getDB("urldb").getCollection("completed");
-        BasicDBObject doc = new BasicDBObject("md5", md5);
+    private static DBCollection getCollection(String crawlId) throws Exception{
+        if (!db.collectionExists(crawlId)) {
+            DBObject options = BasicDBObjectBuilder.start().add("capped", false).get();
+            return db.createCollection(crawlId, options);
+        } else {
+            return db.getCollection(crawlId);
+        }
+    }
 
+    public static void write(String crawlId, WebItem item) throws Exception
+    {
+        DBCollection coll = getCollection(crawlId);
+
+
+        BasicDBObject doc = new BasicDBObject();
+        doc.put("md5", item.getMd5());
+        doc.put("url", item.getUrl());
+        doc.put("date", item.getDate());
+
+        BasicDBList string = new BasicDBList();
+        Map<String,String> params = item.getStringParams();
+        Set<String> keys = params.keySet();
+        for(String key:keys) {
+            String value = params.get(key);
+            string.add(new BasicDBObject(key, value));
+        }
+        doc.put("string", string);
+
+        BasicDBList query = new BasicDBList();
+        params = item.getQueryParams();
+        keys = params.keySet();
+        for(String key : keys) {
+            String value = params.get(key);
+            query.add(new BasicDBObject(key,value));
+        }
+        doc.put("query", query);
+
+        BasicDBList form = new BasicDBList();
+        params = item.getFormParams();
+        keys = params.keySet();
+        for(String key : keys) {
+            String value = params.get(key);
+            form.add(new BasicDBObject(key,value));
+        }
+        doc.put("form", form);
+
+        doc.put("log", item.getLog());
+        doc.put("text",  item.getHtml());
         coll.insert(doc);
         coll.drop();
     }
 
-    public static boolean exist(CrawlRequest request)
+    public static DateTime exist(String crawlId, WebItem item) throws Exception
     {
-        String md5 = request.getMd5();
-        DBCollection coll;
-        coll = client.getDB("urldb").getCollection("completed");
-
-        BasicDBObject query = new BasicDBObject();
-        query.put("md5", md5);
-        DBCursor cursor = coll.find(query);
-        boolean ret = cursor.hasNext();
-        coll.drop();
-        return ret;
+        DBCollection coll = getCollection(crawlId);
+        try {
+            BasicDBObject query = new BasicDBObject();
+            query.put("md5", item.getMd5());
+            DBCursor cursor = coll.find(query).sort(new BasicDBObject("date", -1));
+            if (!cursor.hasNext()) {
+                return null;
+            } else {
+                DBObject last = cursor.next();
+                DateTime fetchTime = new DateTime(last.toMap().get("date"));
+                return fetchTime;
+            }
+        } finally {
+            coll.drop();
+        }
     }
 }

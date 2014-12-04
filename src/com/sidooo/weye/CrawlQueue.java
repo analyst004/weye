@@ -29,8 +29,9 @@ public class CrawlQueue {
 
     public static CrawlRequest poll(String crawlName) throws Exception
     {
-        String stream = redis.lpop(crawlName);
-        return new CrawlRequest(stream);
+       // String stream = redis.lpop(crawlName);
+        //return new CrawlRequest(stream);
+        return null;
     }
 
 }

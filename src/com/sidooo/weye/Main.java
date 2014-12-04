@@ -1,5 +1,6 @@
 package com.sidooo.weye;
 
+import org.apache.log4j.PropertyConfigurator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -29,6 +30,22 @@ public class Main {
             return;
         }
 
+        try {
+            PropertyConfigurator.configure("conf/log4j.properties");
+        } catch (Exception e) {
+            System.out.println("Load log4j Properties Failed.");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            UrlDatabase.init("10.1.1.2", 27017, "webdb" );
+        } catch (Exception e) {
+            System.out.println("Connect Web Database Failed.");
+            return;
+        }
+
+         System.out.println("Load web.xml.");
         try {
             Document doc = Jsoup.parse(xmlFile,"UTF-8");
 

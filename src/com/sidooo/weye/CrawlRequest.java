@@ -24,6 +24,11 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.SimpleLayout;
+import org.apache.log4j.WriterAppender;
+import org.joda.time.DateTime;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,9 +38,11 @@ import org.w3c.dom.Comment;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 
+import java.io.StringWriter;
 import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -43,10 +50,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class WebSelect {
-    private String method;
-    private String key;
-    private String index;
-    private String attribute;
+    private String method = null;
+    private String key = null;
+    private String index = null;
+    private String attribute = null;
 
     public WebSelect(String method, String key,String index, String attribute) {
         this.method = method;
@@ -63,8 +70,12 @@ class WebSelect {
         return key;
     }
 
-    public String getIndex() {
-        return index;
+    public Integer getIndex() {
+        if (index != null) {
+            return Integer.parseInt(index);
+        } else {
+            return null;
+        }
     }
 
     public String getAttribute() {
@@ -81,32 +92,37 @@ class WebSelect {
  */
 public class CrawlRequest {
 
-    private String httpMehtod = "";
+    protected String httpMehtod = "";
 
-    private String host = "";
-    private String path = "";
-    private String log = "";
+    protected String host = "";
+    protected String path = "";
+    private StringWriter stream = new StringWriter();
+    public Logger logger;
     //返回的HTML文本
-    private String html = "";
-    // GET方式填充的参数
-    private Map<String, String> stringParams = new HashMap<String, String>();
-    private Map<String, String> queryParams = new HashMap<String,String>();
-    // Form参数
-    private Map<String, String> formParams = new HashMap<String,String>();
-    private List<WebSelect> webSelects = new ArrayList<WebSelect>();
+    protected String html = "";
 
-    private Map<String,String> cookies = new HashMap<String,String>();
-//    //内置变量
-    private Map<String, String> variables = new HashMap<String, String>();
-    private String referer = "";
+    // GET方式填充的参数
+    protected Map<String, String> stringParams = new HashMap<String, String>();
+    protected Map<String, String> queryParams = new HashMap<String,String>();
+    // Form参数
+    protected Map<String, String> formParams = new HashMap<String,String>();
+    protected List<WebSelect> webSelects = new ArrayList<WebSelect>();
+
+    protected Map<String,String> cookies = new HashMap<String,String>();
+    //内置变量
+    protected Map<String, String> variables = new HashMap<String, String>();
+    protected String referer = null;
+
+    protected String name = null;
+
+    private DateTime date = new DateTime();
 
     public  CrawlRequest() {
-        System.out.println("CrawlRequest inited");
-    }
-
-
-    public CrawlRequest(String stream) {
-
+        UUID requestId = UUID.randomUUID();
+        logger = Logger.getLogger(String.valueOf(requestId));
+        WriterAppender appender = new WriterAppender(new SimpleLayout(), stream);
+        appender.setLayout(new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5.5p %m%n"));
+        logger.addAppender(appender);
     }
 
     public void setHttpMethod(String method) {
@@ -126,12 +142,62 @@ public class CrawlRequest {
     }
 
     public String getLog() {
-        return log;
+        return stream.getBuffer().toString();
+    }
+
+    public String getUrl() {
+        return host + path;
+    }
+
+    public DateTime getDate() {
+        return this.date;
+    }
+
+    public  Map<String,String> getStringParams() {
+        Map<String,String> result = new HashMap<String, String>();
+        Set<String> keys = stringParams.keySet();
+        for (String key : keys) {
+            String value = stringParams.get(key);
+            if (value.charAt(0) == '$') {
+                value = variables.get(value.substring(1));
+            }
+            String text = key +"=" + value;
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    public Map<String, String> getQueryParams() {
+        Map<String,String> result = new HashMap<String, String>();
+        Set<String> keys = queryParams.keySet();
+        for (String key : keys) {
+            String value = queryParams.get(key);
+            if (value.charAt(0) == '$') {
+                value = variables.get(value.substring(1));
+            }
+            String text = key +"=" + value;
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    public Map<String,String> getFormParams() {
+        Map<String,String> result = new HashMap<String, String>();
+        Set<String> keys = formParams.keySet();
+        for (String key : keys) {
+            String value = formParams.get(key);
+            if (value.charAt(0) == '$') {
+                value = variables.get(value.substring(1));
+            }
+            String text = key +"=" + value;
+            result.put(key, value);
+        }
+        return result;
     }
 
     public void addSelect(String method, String key, String index, String attribute) {
         WebSelect select = new WebSelect(method, key, index, attribute);
-//        this.webSelects.add(select);
+        this.webSelects.add(select);
     }
 
     public void setReferer(String referer) {
@@ -139,30 +205,59 @@ public class CrawlRequest {
     }
 
     public String attr(String name) {
-//        return variables.get(name);
-        return "";
+        return variables.get(name);
     }
 
     public void attr(String name, String value) {
-//        variables.put(name, value);
+        variables.put(name, value);
     }
 
     public void addFormParameter(String name, String value) {
-//        formParams.put(name, value);
+        formParams.put(name, value);
     }
 
     public void addQueryParameter(String name, String value) {
-//        queryParams.put(name, value);
+        queryParams.put(name, value);
     }
 
     public void addStringParameter(String name, String value) {
-//        stringParams.put(name, value);
+        stringParams.put(name, value);
     }
 
     public String getMd5(){
         try {
             MessageDigest hash = MessageDigest.getInstance("MD5");
-            byte[] array = hash.digest(host.toLowerCase().getBytes());
+            hash.update(host.toLowerCase().getBytes());
+            hash.update(path.toLowerCase().getBytes());
+            Set<String> keys = stringParams.keySet();
+            for (String key : keys) {
+                String value = stringParams.get(key);
+                if (value.charAt(0) == '$') {
+                    value = variables.get(value.substring(1));
+                }
+                String text = key +"=" + value;
+                hash.update(text.getBytes());
+            }
+            keys = formParams.keySet();
+            for(String key : keys) {
+                String value = formParams.get(key);
+                if (value.charAt(0) == '$') {
+                    value = variables.get(value.substring(1));
+                }
+                String text = key +"=" + value;
+                hash.update(text.getBytes());
+            }
+            keys = queryParams.keySet();
+            for (String key: keys) {
+                String value = queryParams.get(key);
+                if (value.charAt(0) == '$') {
+                    value = variables.get(value.substring(1));
+                }
+                String text = key +"=" + value;
+                hash.update(text.getBytes());
+            }
+
+            byte[] array = hash.digest();
             StringBuffer buffer = new StringBuffer();
             for(int i=0; i < array.length; i++)
             {
@@ -174,9 +269,7 @@ public class CrawlRequest {
         }
     }
 
-
-
-    private String[] xml(String[] texts, String key, Integer index, String attribute) {
+    protected String[] xml(String[] texts, String key, Integer index, String attribute) {
 
         List<String> result = new ArrayList<String>();
 
@@ -218,7 +311,7 @@ public class CrawlRequest {
         return result.toArray(new String[0]);
     }
 
-    private String[] jquery(String[] texts, String key, Integer index, String attribute) {
+    protected String[] jquery(String[] texts, String key, Integer index, String attribute) {
 
         List<String> result = new ArrayList<String>();
 
@@ -271,7 +364,7 @@ public class CrawlRequest {
         return result.toArray(new String[0]);
     }
 
-    private String[] json(String[] texts, String key, Integer index, String attribute)	{
+    protected String[] json(String[] texts, String key, Integer index, String attribute)	{
 
         List<String> result = new ArrayList<String>();
 
@@ -287,7 +380,7 @@ public class CrawlRequest {
         return result.toArray(new String[0]);
     }
 
-    private String[] regular(String[] texts, String key, Integer index, String attribute) {
+    protected String[] regular(String[] texts, String key, Integer index, String attribute) {
 
         List<String> result = new ArrayList<String>();
 
@@ -313,43 +406,17 @@ public class CrawlRequest {
 
         return result.toArray(new String[0]);
     }
-    public String[] select() {
 
-        String[] matches = new String[]{this.html};
-
-//        for(WebSelect select : webSelects) {
-//
-//            String method = select.getMethod();
-//            String key = select.getKey();
-//            Integer index = Integer.parseInt(select.getIndex());
-//            String attribute = select.getAttribute();
-//
-//            if (method == null) {
-//                return null;
-//            } else if ("jquery".equals(method)) {
-//                matches = jquery(matches, key, index, attribute);
-//            } else if ("json".equals(method)){
-//                matches = json(matches, key, index, attribute);
-//            } else if ("regular".equals(method)) {
-//                matches = regular(matches, key, index, attribute);
-//            } else if ("xml".equals(method)) {
-//                matches = xml(matches, key, index, attribute);
-//            } else {
-//                return null;
-//            }
-//        }
-
-        return matches;
-    }
-
-    public void exec() throws Exception {
+    protected boolean fetch() throws Exception {
 
         // prepare http request
         HttpRequestBase http = null;
         if ("get".equals(httpMehtod)) {
+            URL url = new URL(host);
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http");
-            uri.setHost(host);
+            uri.setScheme(url.getProtocol());
+            uri.setHost(url.getHost());
+            uri.setPort(url.getPort());
             uri.setPath(path);
             Set<String> paramNames = stringParams.keySet();
             for (String paramName:paramNames) {
@@ -410,7 +477,8 @@ public class CrawlRequest {
             response = client.execute(http);
             int retCode = response.getStatusLine().getStatusCode();
             if (retCode != 200) {
-                return;
+                logger.warn(response.getStatusLine().getReasonPhrase());
+                return false;
             }
             this.html = EntityUtils.toString(response.getEntity());
             cookies.clear();
@@ -419,12 +487,335 @@ public class CrawlRequest {
                 HeaderElement element = it.nextElement();
                 cookies.put(element.getName(), element.getValue());
             }
+
+
         } catch(Exception e) {
-            return;
+            logger.fatal(e.getStackTrace().toString());
+            return false;
         } finally {
             if (response != null)
                 response.close();
         }
+        logger.info("fetch Web Item succeed.");
+        return true;
 
+    }
+
+
+}
+
+class WebList extends CrawlRequest
+{
+    public static WebList createInstance(String host, Element conf) throws Exception{
+
+        WebList request = new WebList();
+        request.setHost(host);
+
+        Element childNode = conf.select("list").first();
+        request.logger.info(childNode.toString());
+        if (childNode.hasAttr("method")) {
+            String method = childNode.attr("method");
+            request.setHttpMethod(method);
+        }
+
+        if (childNode.hasAttr("path")) {
+            String path = childNode.attr("path");
+            request.setPath(path);
+        }
+
+        if (childNode.hasAttr("pagecount")) {
+            request.attr("pagecount", childNode.attr("pagecount"));
+        }
+
+        Elements childs = childNode.children();
+        for(Element child : childs) {
+            if (child.nodeName().equals("string")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addStringParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("query")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addQueryParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("form")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addFormParameter(paramName, paramValue);
+            }
+        }
+
+        request.logger.info("Parse Web List Configuration Succecced.");
+
+        return request;
+    }
+
+    public int exec() {
+
+        try {
+            if (fetch() ) {
+                // 分析页面， 获取页面总数
+                int pageCount = analysisPageCount(this.html);
+                this.attr("pagecount", Integer.toString(pageCount));
+                return pageCount;
+            } else {
+                return 0;
+            }
+        } catch (Exception e) {
+            return 0;
+        }
+
+
+    }
+
+    private int analysisPageCount(String html) {
+        Document doc = Jsoup.parse(this.html);
+        Elements elements = doc.getElementsContainingOwnText("尾页");
+        if (elements != null ) {
+            Element element = elements.get(0);
+            if (element != null) {
+                if (element.hasAttr("onclick")) {
+                    String onclick = element.attr("onclick");
+                    Pattern pattern = Pattern.compile("^\\w+\\((\\d+)\\)",Pattern.CASE_INSENSITIVE);
+                    Matcher match = pattern.matcher(onclick);
+                    if (match.find()) {
+                        String text = match.group(1);
+                        int pageCount = Integer.parseInt(text);
+                        return pageCount;
+                    }
+                }
+            }
+        }
+
+        return 0;
+
+    }
+
+}
+
+class  WebPage extends  CrawlRequest
+{
+
+    public static WebPage createInstance(String host, Element conf) {
+
+        WebPage request = new WebPage();
+
+        request.setHost(host);
+
+        Element childNode = conf.select("page").first();
+        request.logger.info(childNode.toString());
+
+        if (childNode.hasAttr("method")) {
+            request.setHttpMethod(childNode.attr("method"));
+        }
+
+        if (childNode.hasAttr("path")) {
+            request.setPath(childNode.attr("path"));
+        }
+
+        Elements childs = childNode.children();
+        for(Element child : childs) {
+            if (child.nodeName().equals("string")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addStringParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("query")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addQueryParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("form")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addFormParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("select")) {
+
+                String selectMethod = child.attr("method");
+                String selectKey = child.attr("key");
+                String selectIndex = null;
+                if (child.hasAttr("index")) {
+                    selectIndex = child.attr("index");
+                }
+
+                String selectAttribute = null;
+                if (child.hasAttr("attribute")) {
+                    selectAttribute = child.attr("attribute");
+                }
+                request.addSelect(selectMethod, selectKey, selectIndex, selectAttribute);
+            }
+        }
+        request.logger.info("Parse Web Page Configuration Succecced.");
+        return request;
+    }
+
+    public  String[] exec(int pageId) {
+        try {
+            this.attr("pageid", Integer.toString(pageId));
+            if (fetch() ) {
+                return select(this.html);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String[] select(String html) {
+
+        String[] matches = new String[]{html};
+
+        for(WebSelect select : webSelects) {
+
+            String method = select.getMethod();
+            String key = select.getKey();
+            Integer index = select.getIndex();
+            String attribute = select.getAttribute();
+
+            if (method == null) {
+                return null;
+            } else if ("jquery".equals(method)) {
+                matches = jquery(matches, key, index, attribute);
+            } else if ("json".equals(method)){
+                matches = json(matches, key, index, attribute);
+            } else if ("regular".equals(method)) {
+                matches = regular(matches, key, index, attribute);
+            } else if ("xml".equals(method)) {
+                matches = xml(matches, key, index, attribute);
+            } else {
+                return null;
+            }
+        }
+
+        return matches;
+    }
+
+}
+
+class WebItem extends  CrawlRequest
+{
+    public static WebItem createInstance(String host, Element conf) throws Exception {
+
+        WebItem request = new WebItem();
+
+        request.setHost(host);
+
+        Element childNode = conf.select("item").first();
+        request.logger.info(childNode.toString());
+        if (childNode.hasAttr("method")) {
+            request.setHttpMethod(childNode.attr("method"));
+        }
+
+        if (childNode.hasAttr("path")) {
+            request.setPath(childNode.attr("path"));
+        }
+
+        Elements childs = childNode.children();
+        for(Element child : childs) {
+            if (child.nodeName().equals("string")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addStringParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("query")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addQueryParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("form")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addFormParameter(paramName, paramValue);
+            }
+
+        }
+
+        request.logger.info("Parse Web Item Configuration Succecced.");
+        return request;
+    }
+
+    public void exec(String itemId) {
+        try {
+            logger.info("itemid = "+itemId);
+            this.attr("itemid", itemId);
+            fetch();
+        } catch (Exception e) {
+            return;
+        }
+    }
+}
+
+class WebEntry extends CrawlRequest
+{
+
+    public static WebEntry createInstance(String host, Element conf) throws Exception{
+
+        WebEntry request = new WebEntry();
+
+        request.setHost(host);
+
+        Element childNode = conf.select("entry").first();
+        if (childNode.hasAttr("method")) {
+            request.setHttpMethod(childNode.attr("method"));
+        }
+
+        if (childNode.hasAttr("path")) {
+            request.setPath(childNode.attr("path"));
+        }
+
+        Elements childs = childNode.children();
+        for(Element child : childs) {
+            if (child.nodeName().equals("string")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addStringParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("query")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addQueryParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("form")) {
+                String paramName = child.attr("name");
+                String paramValue = child.text();
+                request.addFormParameter(paramName, paramValue);
+            }
+
+            if (child.nodeName().equals("select")) {
+
+                String selectMethod = child.attr("method");
+                String selectKey = child.attr("key");
+                String selectIndex = child.attr("index");
+                String selectAttribute = child.attr("attribute");
+
+                request.addSelect(selectMethod, selectKey, selectIndex, selectAttribute);
+            }
+
+
+
+        }
+
+        return request;
+    }
+
+    public String[] exec() {
+        try {
+            fetch();
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
