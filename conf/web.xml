@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <root>
-    <web  name="最高人民法院" index="http://www.court.gov.cn">
-        <browse name="全国法院失信被执行人名单(自然人)" host="http://shixin.court.gov.cn">
+    <web name="最高人民法院" index="http://www.court.gov.cn">
+        <browse id="WA110001G" name="全国法院失信被执行人名单(自然人)" host="http://shixin.court.gov.cn" enable="true">
             <list method="get"  path="/personMore.do"/>
             <page method="post" path="/personMore.do">
                 <form name="currentPage">$pageid</form>
@@ -11,7 +11,7 @@
                 <string name="id">$itemid</string>
             </item>
         </browse>
-        <browse name="全国法院失信被执行人名单(法人或其他组织)" host="http://shixin.court.gov.cn">
+        <browse id="WA110002G" name="全国法院失信被执行人名单(法人或其他组织)" host="http://shixin.court.gov.cn" enable="false">
             <list method="get" path="/unitMore.do"></list>
             <page method="post" path="/unitMore.do">
                 <form name="currentPage">$pageid</param>
@@ -21,7 +21,7 @@
                 <string name="id">$itemid</string>
             </item>
         </browse>
-        <query name="被执行人信息查询" host="http://zhixing.court.gov.cn">
+        <query id="WA110003G" name="被执行人信息查询" host="http://zhixing.court.gov.cn" enable="false">
             <entry method="post" path="/search">
                     <form name="searchCourtName">全国法院（包含地方各级法院）</form>
                     <form name="selectCourtId">1</form>
@@ -41,42 +41,42 @@
                 <string name="id">$itemid</string>
             </item>
         </query>
-        <browse name="裁判文书(民事案件)">
+        <browse id="WA110004G" name="裁判文书(民事案件)" enable="false">
             <list method="get" path="/zgcpwsw/mshz/"></list>
             <page method="get" path="/zgcpwsw/mshz/index_%pageid%.htm">
                 <select method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
             </page>
             <item method="get" path="$itemid"/>
         </browse>
-        <browse name="裁判文书(刑事案件)">
+        <browse id="WA110005G" name="裁判文书(刑事案件)" enable="false">
             <list method="get" path="/zgcpwsw/xshz/"/>
             <page method="get" path="/zgcpwsw/xshz/index_%pageid%.htm"/>
             <item method="get">
                 <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
             </item>
         </browse>
-        <browse name="裁判文书(行政案件)">
+        <browse id="WA110006G" name="裁判文书(行政案件)" enable="false">
             <list method="get" path="/zgcpwsw/xzhz/"/>
             <page method="get" path="/zgcpwsw/xzhz/index_%pageid%.htm"/>
             <item method="get">
                 <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
             </item>
         </browse>
-        <browse name="裁判文书(知识产权)">
+        <browse id="WA110007G" name="裁判文书(知识产权)" enable="false">
             <list method="get" path="/zgcpwsw/zscqhz/"/>
             <page method="get" path="/zgcpwsw/zscqhz/index_%pageid%.htm"/>
             <item method="get">
                 <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
             </item>
         </browse>
-        <browse name="裁判文书(赔偿案件)">
+        <browse id="WA110008G" name="裁判文书(赔偿案件)" enable="false">
             <list method="get" path="/zgcpwsw/pchz/"/>
             <page method="get" path="/zgcpwsw/pchz/index_%pageid%.htm"/>
             <item method="get">
                 <url  method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
             </item>
         </browse>
-        <browse name="裁判文书(执行案件)">
+        <browse id="WA110009G" name="裁判文书(执行案件)" enable="false">
             <list method="get" path="/zgcpwsw/zxhz/"/>
             <page method="get" path="/zgcpwsw/zxhz/index_%pageid%.htm"></page>
             <item method="get">
@@ -127,13 +127,13 @@
             </item>
         </template>
 
-        <browse name="个人未履行生效裁判失信信息" template="person" >
+        <browse id="WA110010G" name="个人未履行生效裁判失信信息" template="person" >
             <param name="tableId">96CFC60C35F527A811D198BC91914AA1DCBE1E79980CBCABFA17E2D0294F345F</param>
         </browse>
-        <browse name="职业技能证书信息" template="person">
+        <browse id="WA110011G" name="职业技能证书信息" template="person">
             <param name="tableId">352304340452A572342F92596164B1B64EA5B6205AAC89C1FC3FF9B6C8D0F99C</param>
         </browse>
-        <browse name="人事考试违纪信息" template="person">
+        <browse id="WA110012G" name="人事考试违纪信息" template="person">
             <param name="tableId">F1484791A10853BCBD82F78AAAC29C97</param>
         </browse>
         <browse name="单位未履行生效裁判失信信息" template="enterprise">
@@ -208,7 +208,7 @@
     </web>
 
     <web name="无锡市房地产信息公众网" host="http://pub.wxlife.cn">
-        <browse name="商品房备案列表">
+        <browse name="商品房备案列表" enable="false">
             <list pagecount="100" />
             <page name="buildList" method="get" url="/BuildList.pub">
                 <query name="page">?</query>
@@ -226,7 +226,7 @@
             </item>
         </browse>
 
-        <browse name="无锡房地产开发商名单" >
+        <browse name="无锡房地产开发商名单" enable="false">
             <list pagecount="50"/>
             <page method="get" url="/ProvList.pub">
                 <query name="page">$pageid</query>
@@ -235,7 +235,7 @@
                 <string name="prid" method="regular" key="^ProvInfo\.pub\?prid=(\d+)" index="0"/>
             </item>
         </browse>
-        <browse name="无锡房地产中介公司名单" host="http://pub.wxlife.cn">
+        <browse name="无锡房地产中介公司名单" host="http://pub.wxlife.cn" enable="false">
             <list method="get" url="/ProxyList.pub" pagecount="20" />
             <page method="get" url="/ProxyList.pub">
                 <query name="page">$pageid</query>
@@ -247,7 +247,7 @@
     </web>
 
     <web name="无锡人力资源招聘网">
-        <browse name="个人简历" host="http://www.wxhrzp.com">
+        <browse name="个人简历" host="http://www.wxhrzp.com" enable="false">
             <prepare method="get" path="/"/>
             <login method="post" path="/identity">
                 <query name="userName">kimzhang</query>
@@ -265,7 +265,7 @@
     </web>
 
     <web name="江苏省工商行政管理局" >
-        <query name="企业信息" host="http://www.jsgsj.gov.cn">
+        <query name="企业信息" host="http://www.jsgsj.gov.cn" enable="false">
             <entry method="post" path="/baweb/show/sj/business_query.jsp">
                 <string name="flag">2</string>
                 <string name="fenceid">1</string>
@@ -283,7 +283,7 @@
     </web>
 
     <web name="上海市工商行政管理局" >
-        <query name="企业信息" host="http://www.sgs.gov.cn">
+        <query name="企业信息" host="http://www.sgs.gov.cn" enable="false">
             <prepare name="getcookie" method="get" path="/lz/etpsInfo.do?method=index"></prepare>
             <entry method="post" path="/lz/etpsInfo.do?method=doSearch">
                 <form name="searchType">1</form>
@@ -300,7 +300,7 @@
     </web>
 
     <web name="全国企业信用信息公示系统(北京)" >
-        <query name="企业信息" host="http://qyxy.baic.gov.cn/">
+        <query name="企业信息" host="http://qyxy.baic.gov.cn/" enable="false">
             <prepare method="get" path="/beijing"/>
             <entry method="post" path="/gjjbj/gjjQueryCreditAction!getBjQyList.dhtml">
                 <query name="currentTimeMillis">?</query>
