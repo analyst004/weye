@@ -1,5 +1,6 @@
 package com.sidooo.weye;
 
+import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,29 +24,31 @@ public class Main {
 	
 	public static void main(String[] args) {
 
-        String xmlPath = "conf/web.xml";
+        Logger logger = Logger.getRootLogger();
+
+        String xmlPath = "/etc/weye/web.xml";
         File xmlFile = new File(xmlPath);
         if (!xmlFile.exists() || xmlFile.isDirectory()) {
-            System.out.println("Can't find web.xml");
+            logger.error("Can't find web.xml");
             return;
         }
 
         try {
-            PropertyConfigurator.configure("conf/log4j.properties");
+            PropertyConfigurator.configure("/etc/weye/log4j.properties");
         } catch (Exception e) {
-            System.out.println("Load log4j Properties Failed.");
-            e.printStackTrace();
+            logger.error("Load log4j Properties Failed.");
+            logger.error(e.getStackTrace().toString());
             return;
         }
 
         try {
             UrlDatabase.init("10.1.1.2", 27017, "webdb" );
         } catch (Exception e) {
-            System.out.println("Connect Web Database Failed.");
+            logger.error("Connect Web Database Failed.");
             return;
         }
 
-         System.out.println("Load web.xml.");
+        logger.error("Load web.xml.");
         try {
             Document doc = Jsoup.parse(xmlFile,"UTF-8");
 
@@ -76,9 +79,9 @@ public class Main {
             }
 
         } catch (Exception e) {
-
+            logger.error(e.getStackTrace().toString());
         } finally {
-            System.out.println("weye exit.");
+            logger.warn("weye exit.");
         }
 
 

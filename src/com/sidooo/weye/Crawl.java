@@ -100,7 +100,8 @@ public class Crawl implements Runnable {
             return true;
         }
         int minutes = Minutes.minutesBetween(lastRunTime, new DateTime()).getMinutes();
-        return minutes >= 60;
+        // 时间间隔24小时
+        return minutes >= 1440;
     }
 
     @Override
@@ -223,22 +224,22 @@ class BrowseCrawl extends Crawl  {
                         break;
                     }
 
-                    try {
-                        DateTime now = new DateTime();
-                        DateTime fetchTime = UrlDatabase.exist(this.getId(), webItem);
-                        if (fetchTime != null) {
-                            int hours = Hours.hoursBetween(fetchTime, now).getHours();
-                            if (hours < 72) {
-                                //距离上次采集时间未超过72小时， 不进行更新
-                                //列表后面的内容也不需要继续获取了
-                                needContinue = false;
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Get Web Item Last update time failed.");
-                        logger.warn(e.getStackTrace().toString());
-                    }
+//                    try {
+//                        DateTime now = new DateTime();
+//                        DateTime fetchTime = UrlDatabase.exist(this.getId(), webItem);
+//                        if (fetchTime != null) {
+//                            int hours = Hours.hoursBetween(fetchTime, now).getHours();
+//                            if (hours < 72) {
+//                                //距离上次采集时间未超过72小时， 不进行更新
+//                                //列表后面的内容也不需要继续获取了
+//                                needContinue = false;
+//                                break;
+//                            }
+//                        }
+//                    } catch (Exception e) {
+//                        logger.warn("Get Web Item Last update time failed.");
+//                        logger.warn(e.getStackTrace().toString());
+//                    }
 
                     try {
                         webItem.exec(item);
