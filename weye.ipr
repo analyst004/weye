@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ArtifactManager">
     <artifact type="jar" name="weye:jar">
-      <output-path>$PROJECT_DIR$/</output-path>
+      <output-path>$PROJECT_DIR$/bin/</output-path>
       <root id="archive" name="weye.jar">
         <element id="module-output" name="weye" />
         <element id="extracted-dir" path="$PROJECT_DIR$/lib/jsoup-1.8.1/jsoup-1.8.1-javadoc.jar" path-in-jar="/" />
