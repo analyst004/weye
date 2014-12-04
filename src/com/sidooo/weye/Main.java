@@ -62,17 +62,21 @@ public class Main {
 
                     Elements confs = web.children();
                     for (Element conf : confs) {
+                        if (!conf.hasAttr("id")) {
+                            continue;
+                        }
+
                         String confType = conf.nodeName();
                         if ("browse".equals(confType)) {
                             Crawl crawl = Crawl.createInstance(CrawlType.BROWSE, conf);
                             crawlList.add(crawl);
                             new Thread(crawl).start();
                         } else if ("query".equals(confType)) {
-                            Crawl crawl = Crawl.createInstance(CrawlType.QUERY, conf);
-                            crawlList.add(crawl);
-                            new Thread(crawl).start();
+//                            Crawl crawl = Crawl.createInstance(CrawlType.QUERY, conf);
+//                            crawlList.add(crawl);
+//                            new Thread(crawl).start();
                         } else {
-
+                            continue;
                         }
                     }
                 }
