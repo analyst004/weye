@@ -5,13 +5,13 @@
             <list method="get"  path="/personMore.do"/>
             <page method="post" path="/personMore.do">
                 <form name="currentPage">$pageid</form>
-                <select method="jquery" key="table.Resultlist a[title]" attribute="id"></select>
+                <select method="jquery" key="table.Resultlist a[title]" attribute="id"/>
             </page>
             <item method="get" path="/detail">
                 <string name="id">$itemid</string>
             </item>
         </browse>
-        <browse id="WA110002G" name="全国法院失信被执行人名单(法人或其他组织)" host="http://shixin.court.gov.cn" enable="false">
+        <browse id="WA110002G" name="全国法院失信被执行人名单(法人或其他组织)" host="http://shixin.court.gov.cn" enable="true">
             <list method="get" path="/unitMore.do"></list>
             <page method="post" path="/unitMore.do">
                 <form name="currentPage">$pageid</param>
