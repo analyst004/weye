@@ -41,6 +41,8 @@ tip "Install weye service ..."
 #setup daemon script
 cp ./bin/daemon.sh /etc/init.d/weye
 [ $? -eq 0 ] || fail
+chmod 755 /etc/init.d/weye
+[ $? -eq 0 ] || fail
 
 #setup weye jar file
 cp ./bin/weye.jar /usr/bin/weye.jar
