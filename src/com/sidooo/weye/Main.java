@@ -78,6 +78,9 @@ public class Main {
                 }
             }
 
+            while(true) {
+                Thread.sleep(99999999);
+            }
         } catch (Exception e) {
             logger.error(e.getStackTrace().toString());
         } finally {

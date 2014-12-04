@@ -12,7 +12,7 @@ ret=0
 start() {
 
     echo "start weye"
-    daemon java -jar /usr/bin/weye.jar &
+    java -jar /usr/bin/weye.jar &
     ret=$?
 }
 
