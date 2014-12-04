@@ -212,6 +212,11 @@ class BrowseCrawl extends Crawl  {
                     }
                 }
 
+                if (items == null) {
+                    logger.warn("Web Page "+i+" is null");
+                    continue;
+                }
+
                 for( String item : items) {
 
                     WebItem webItem = null;
