@@ -7,31 +7,46 @@
 #
 . /etc/rc.d/init.d/functions
 
+NAME="weye"
+PID_FILE="/var/run/weye.pid"
+
 ret=0
+case $1 in
+    start)
+        echo "start ${NAME} ..."
+        if [ ! -f $PID_FILE ]; then
+            nohup java -jar /usr/bin/weye.jar &
+            echo $! > $PID_FILE
+            echo "${NAME} started ..."
+        else
+            echo "${NAME} is already running ..."
+        fi
+    ;;
+    stop)
+        if [ -f $PID_FILE ]; then
+            PID=$(cat $PID_FILE);
+            echo "Stopping ${NAME} ..."
+            kill $PID;
+            echo "${NAME} stopping ..."
+            rm $PID_FILE
+        else
+            echo "${NAME} is not running ..."
+        fi
+    ;;
+    restart)
+        if [ -f $PID_FILE ]; then
+            PID=$(cat $PID_FILE);
+            echo "Stopping ${NAME} ...";
+            kill $PID;
+            echo "${NAME} stopped ...";
+            rm $PID_FILE
 
-start() {
-
-    echo "start weye"
-    java -jar /usr/bin/weye.jar &
-    ret=$?
-}
-
-stop() {
-    echo "stop weye"
-    kill -9 $(ps -ef | grep weye | grep -v grep | awk '{print $2}')
-    ret=$?
-}
-
-status() {
-    local result
-    echo "check status of weye ..."
-    result=$( ps -ef | grep weye | grep -v grep | wc -l )
-    if [ $result -gt 0 ]; then
-        echo "weye is up"
-        ret=0
-    else
-        echo "weye is down"
-        ret=1
-    fi
-    echo "check status of weye ... done."
-}
+            echo "Starting ${NAME} ..."
+            nohup java -jar /usr/bin/weye.jar &
+            echo $! > $PID_FILE
+            echo "${NAME} started ..."
+        else
+            echo "${NAME} is not running ..."
+        fi
+     ;;
+esac
