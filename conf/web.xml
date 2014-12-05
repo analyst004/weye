@@ -41,47 +41,47 @@
                 <string name="id">$itemid</string>
             </item>
         </query>
-        <browse id="WA110004G" name="裁判文书(民事案件)" enable="false">
+        <browse id="WA110004G" name="裁判文书(民事案件)" host="http://www.court.gov.cn" enable="true">
             <list method="get" path="/zgcpwsw/mshz/"></list>
             <page method="get" path="/zgcpwsw/mshz/index_%pageid%.htm">
-                <select method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
+                <select method="jquery" key="div.bottom_right_con_five_list li a[href]" attribute="href"/>
             </page>
-            <item method="get" path="$itemid"/>
+            <item method="get" path="/zgcpwsw/mshz/%itemid%"/>
         </browse>
-        <browse id="WA110005G" name="裁判文书(刑事案件)" enable="false">
+        <browse id="WA110005G" name="裁判文书(刑事案件)" host="http://www.court.gov.cn" enable="true">
             <list method="get" path="/zgcpwsw/xshz/"/>
-            <page method="get" path="/zgcpwsw/xshz/index_%pageid%.htm"/>
-            <item method="get">
-                <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
-            </item>
+            <page method="get" path="/zgcpwsw/xshz/index_%pageid%.htm">
+                <select method="jquery" key="div.bottom_right_con_five_list li a[href]" attribute="href"/>
+            </page>
+            <item method="get" path="/zgcpwsw/xshz/%itemid%"/>
         </browse>
-        <browse id="WA110006G" name="裁判文书(行政案件)" enable="false">
+        <browse id="WA110006G" name="裁判文书(行政案件)" host="http://www.court.gov.cn" enable="true">
             <list method="get" path="/zgcpwsw/xzhz/"/>
-            <page method="get" path="/zgcpwsw/xzhz/index_%pageid%.htm"/>
-            <item method="get">
-                <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
-            </item>
+            <page method="get" path="/zgcpwsw/xzhz/index_%pageid%.htm">
+                <select method="jquery" key="div.bottom_right_con_five_list li a[href]" attribute="href"/>
+            </page>
+            <item method="get" path="/zgcpwsw/xzhz/%itemid%"/>
         </browse>
-        <browse id="WA110007G" name="裁判文书(知识产权)" enable="false">
+        <browse id="WA110007G" name="裁判文书(知识产权)" host="http://www.court.gov.cn" enable="true">
             <list method="get" path="/zgcpwsw/zscqhz/"/>
-            <page method="get" path="/zgcpwsw/zscqhz/index_%pageid%.htm"/>
-            <item method="get">
-                <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
-            </item>
+            <page method="get" path="/zgcpwsw/zscqhz/index_%pageid%.htm">
+                <select method="jquery" key="div.bottom_right_con_five_list li a[href]" attribute="href"/>
+            </page>
+            <item method="get" path="/zgcpwsw/zscqhz/%itemid%"/>
         </browse>
-        <browse id="WA110008G" name="裁判文书(赔偿案件)" enable="false">
+        <browse id="WA110008G" name="裁判文书(赔偿案件)" host="http://www.court.gov.cn" enable="true">
             <list method="get" path="/zgcpwsw/pchz/"/>
-            <page method="get" path="/zgcpwsw/pchz/index_%pageid%.htm"/>
-            <item method="get">
-                <url  method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"/>
-            </item>
+            <page method="get" path="/zgcpwsw/pchz/index_%pageid%.htm">
+                <select  method="jquery" key="div.bottom_right_con_five_list li a[href]" attribute="href"/>
+            </page>
+            <item method="get" path="/zgcpwsw/pchz/%itemid%"/>
         </browse>
-        <browse id="WA110009G" name="裁判文书(执行案件)" enable="false">
+        <browse id="WA110009G" name="裁判文书(执行案件)" host="http://www.court.gov.cn" enable="true">
             <list method="get" path="/zgcpwsw/zxhz/"/>
-            <page method="get" path="/zgcpwsw/zxhz/index_%pageid%.htm"></page>
-            <item method="get">
-                <url method="jquery" key="div.bottom_right_con_five_list li a[href]" index="0" attribute="href"></url>
-            </item>
+            <page method="get" path="/zgcpwsw/zxhz/index_%pageid%.htm">
+                <select method="jquery" key="div.bottom_right_con_five_list li a[href]" attribute="href"/>
+            </page>
+            <item method="get" path="/zgcpwsw/zxhz/%itemid%"/>
         </browse>
     </web>
 

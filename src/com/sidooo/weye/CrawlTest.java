@@ -25,25 +25,26 @@ public class CrawlTest {
 	}
 
 	@Test
-	public void test() throws Exception {
+	public void test1() throws Exception {
 
         File xmlFile = new File("conf/web.xml");
         Document doc = Jsoup.parse(xmlFile,"UTF-8");
-        Element web = doc.select("web").first();
-        Element browse = web.select("browse").first();
+        Element browse = doc.select("browse[id=WA110001G]").first();
+        Element web = browse.parent();
 
         Crawl crawl = Crawl.createInstance(CrawlType.BROWSE, browse);
-		
-		assertEquals(crawl.getStatus(), CrawlStatus.CLOSED);
-		
-		//crawl.start();
         crawl.run();
-
-
-
-
-        assertEquals(crawl.getStatus(), CrawlStatus.CLOSED);
 	}
-	
-	
+
+    @Test
+    public void test2() throws Exception {
+
+        File xmlFile = new File("conf/web.xml");
+        Document doc = Jsoup.parse(xmlFile,"UTF-8");
+        Element browse = doc.select("browse[id=WA110004G]").first();
+        Element web = browse.parent();
+
+        Crawl crawl = Crawl.createInstance(CrawlType.BROWSE, browse);
+        crawl.run();
+    }
 }

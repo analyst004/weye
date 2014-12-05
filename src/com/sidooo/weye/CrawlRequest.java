@@ -145,8 +145,21 @@ public class CrawlRequest {
         return stream.getBuffer().toString();
     }
 
+    public String getPath() {
+        String ret = path;
+        if (variables.containsKey("pageid")) {
+            ret = ret.replace("%pageid%", variables.get("pageid"));
+        }
+
+        if (variables.containsKey("itemid")) {
+            ret = ret.replace("%itemid%", variables.get("itemid"));
+        }
+
+        return ret;
+    }
+
     public String getUrl() {
-        return host + path;
+        return host + getPath();
     }
 
     public DateTime getDate() {
@@ -228,7 +241,7 @@ public class CrawlRequest {
         try {
             MessageDigest hash = MessageDigest.getInstance("MD5");
             hash.update(host.toLowerCase().getBytes());
-            hash.update(path.toLowerCase().getBytes());
+            hash.update(getPath().toLowerCase().getBytes());
             Set<String> keys = stringParams.keySet();
             for (String key : keys) {
                 String value = stringParams.get(key);
@@ -361,7 +374,7 @@ public class CrawlRequest {
             }
         }
 
-        return result.toArray(new String[0]);
+        return  new HashSet<String>(result).toArray(new String[0]);
     }
 
     protected String[] json(String[] texts, String key, Integer index, String attribute)	{
@@ -417,7 +430,7 @@ public class CrawlRequest {
             uri.setScheme(url.getProtocol());
             uri.setHost(url.getHost());
             uri.setPort(url.getPort());
-            uri.setPath(path);
+            uri.setPath(getPath());
             Set<String> paramNames = stringParams.keySet();
             for (String paramName:paramNames) {
                 String paramValue = stringParams.get(paramName);
@@ -438,7 +451,7 @@ public class CrawlRequest {
                 form.add(new BasicNameValuePair(paramName, paramValue));
             }
             UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
-            HttpPost post = new HttpPost(host+path);
+            HttpPost post = new HttpPost(getUrl());
             post.setEntity(entity);
             http = post;
         } else {
@@ -481,6 +494,10 @@ public class CrawlRequest {
                 return false;
             }
             this.html = EntityUtils.toString(response.getEntity());
+
+            //尝试解决中文乱码
+            this.html = new String(this.html.getBytes("ISO-8859-1"), "UTF-8");
+
             cookies.clear();
             HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator("Set-Cookie"));
             while(it.hasNext()) {
@@ -572,22 +589,63 @@ class WebList extends CrawlRequest
     }
 
     private int analysisPageCount(String html) {
-        Document doc = Jsoup.parse(this.html);
-        Elements elements = doc.getElementsContainingOwnText("尾页");
-        if (elements != null ) {
-            Element element = elements.get(0);
-            if (element != null) {
-                if (element.hasAttr("onclick")) {
-                    String onclick = element.attr("onclick");
-                    Pattern pattern = Pattern.compile("^\\w+\\((\\d+)\\)",Pattern.CASE_INSENSITIVE);
-                    Matcher match = pattern.matcher(onclick);
-                    if (match.find()) {
-                        String text = match.group(1);
-                        int pageCount = Integer.parseInt(text);
-                        return pageCount;
+        Document doc = Jsoup.parse(html);
+        Element element = doc.getElementsContainingOwnText("尾页").first();
+        if (element != null ) {
+            //存在“尾页”的标签
+            if (element.hasAttr("onclick")) {
+                //<a href="javascript:void(0);" onclick="gotoPage(29170)">尾页</a>
+                String onclick = element.attr("onclick");
+                Pattern pattern = Pattern.compile("^\\w+\\((\\d+)\\)",Pattern.CASE_INSENSITIVE);
+                Matcher match = pattern.matcher(onclick);
+                if (match.find()) {
+                    String text = match.group(1);
+                    int pageCount = Integer.parseInt(text);
+                    return pageCount;
+                }
+            }
+
+            if (element.hasAttr("href"))  {
+                //<a href="index_7654.htm">尾页</a>
+                String href = element.attr("href");
+                Pattern pattern = Pattern.compile("^index_(\\d+).htm$", Pattern.CASE_INSENSITIVE);
+                Matcher match = pattern.matcher(href);
+                if (match.find()) {
+                    String text = match.group(1);
+                    int pageCount = Integer.parseInt(text);
+                    return pageCount;
+                }
+            }
+
+        }  else {
+
+            Elements elements = doc.select("script");
+            for( Element script : elements) {
+
+                //<script>createPageHTML(7655,1,"index","htm");</script>
+                String text = script.html();
+                if (text.indexOf("createPageHTML")>= 0 ) {
+                    String[] items = text.split("\\W");
+                    int maxValue = 0;
+                    for(String item : items) {
+                        int value = 0;
+                        try {
+                            value = Integer.parseInt(item);
+                        } catch (Exception e){
+                            value = 0;
+                        }
+
+                        if (value > maxValue) {
+                            maxValue = value;
+                        }
+                    }
+
+                    if (maxValue > 0) {
+                        return maxValue;
                     }
                 }
             }
+
         }
 
         return 0;
