@@ -2,6 +2,8 @@ package com.sidooo.weye;
 
 import com.mongodb.*;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -60,7 +62,10 @@ public class UrlDatabase {
         BasicDBObject doc = new BasicDBObject();
         doc.put("md5", item.getMd5());
         doc.put("url", item.getUrl());
-        doc.put("date", item.getDate());
+
+        DateTimeFormatter parser = ISODateTimeFormat.dateTime();
+        Date date = new Date(item.getDate().getMillis());
+        doc.put("date", date);
 
         BasicDBList string = new BasicDBList();
         Map<String,String> params = item.getStringParams();
@@ -91,8 +96,7 @@ public class UrlDatabase {
 
         doc.put("log", item.getLog());
         doc.put("text",  item.getHtml());
-        coll.insert(doc);
-        coll.drop();
+        coll.insert(doc, WriteConcern.SAFE);
     }
 
     public static DateTime exist(String crawlId, WebItem item) throws Exception
