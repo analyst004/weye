@@ -513,7 +513,7 @@ public class CrawlRequest {
             StringBuilder out = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
-                out.append(line);
+                out.append(line+"\r\n");
             }
             this.html = out.toString();
 
