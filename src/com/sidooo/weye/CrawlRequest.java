@@ -515,7 +515,7 @@ public class CrawlRequest {
             while ((line = reader.readLine()) != null) {
                 out.append(line+"\r\n");
             }
-            this.html = out.toString();
+            this.html = new String(out.toString().getBytes(), "UTF-8");
 
 
             //this.html = new String(this.html.getBytes(charset), "UTF-8");
