@@ -1,11 +1,7 @@
 package com.sidooo.weye;
 
-import com.sun.xml.internal.bind.v2.runtime.RuntimeUtil;
 import net.sf.json.JSONObject;
-import org.apache.http.Consts;
-import org.apache.http.HeaderElement;
-import org.apache.http.HeaderElementIterator;
-import org.apache.http.NameValuePair;
+import org.apache.http.*;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -17,6 +13,7 @@ import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieSpec;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -37,12 +34,17 @@ import org.jsoup.select.Elements;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+import sun.misc.IOUtils;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -489,14 +491,34 @@ public class CrawlRequest {
         try {
             response = client.execute(http);
             int retCode = response.getStatusLine().getStatusCode();
-            if (retCode != 200) {
+            if (retCode >= 300) {
                 logger.warn(response.getStatusLine().getReasonPhrase());
                 return false;
             }
-            this.html = EntityUtils.toString(response.getEntity());
+            HttpEntity entity = response.getEntity();
+            if (entity == null) {
+                logger.warn("Response contains no content.");
+                return false;
+            }
 
-            //尝试解决中文乱码
-            this.html = new String(this.html.getBytes("ISO-8859-1"), "UTF-8");
+            ContentType contentType = ContentType.get(entity);
+            Charset charset = contentType.getCharset();
+            if (charset == null) {
+                charset = Charset.defaultCharset();
+            }
+
+            //解决中文乱码
+            InputStreamReader isr = new InputStreamReader(entity.getContent(), charset);
+            BufferedReader reader = new BufferedReader(isr);
+            StringBuilder out = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                out.append(line);
+            }
+            this.html = out.toString();
+
+
+            //this.html = new String(this.html.getBytes(charset), "UTF-8");
 
             cookies.clear();
             HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator("Set-Cookie"));

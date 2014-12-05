@@ -304,10 +304,15 @@
     <library name="joda-time-2.4">
       <CLASSES>
         <root url="file://$PROJECT_DIR$/lib/joda-time-2.4" />
+        <root url="file://$PROJECT_DIR$/lib/joda-time-2.4" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES />
+      <SOURCES>
+        <root url="file://$PROJECT_DIR$/lib/joda-time-2.4" />
+      </SOURCES>
       <jarDirectory url="file://$PROJECT_DIR$/lib/joda-time-2.4" recursive="false" />
+      <jarDirectory url="file://$PROJECT_DIR$/lib/joda-time-2.4" recursive="false" />
+      <jarDirectory url="file://$PROJECT_DIR$/lib/joda-time-2.4" recursive="false" type="SOURCES" />
     </library>
     <library name="json-lib-2.4">
       <CLASSES>
@@ -339,11 +344,11 @@
     <library name="log4j-1.2.17">
       <CLASSES>
         <root url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" />
+        <root url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" />
       </CLASSES>
-      <JAVADOC>
-        <root url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17/site/apidocs" />
-      </JAVADOC>
+      <JAVADOC />
       <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" recursive="false" />
       <jarDirectory url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" recursive="false" />
     </library>
     <library name="mongodb-2.6.5">
