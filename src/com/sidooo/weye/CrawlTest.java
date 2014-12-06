@@ -17,7 +17,7 @@ public class CrawlTest {
 	
 	@Before
 	public void setUp() throws Exception {
-        UrlDatabase.init("10.1.1.2", 27017, "test" );
+        UrlDatabase.init("10.1.1.5", 27017, "test" );
 	}
 
 	@After

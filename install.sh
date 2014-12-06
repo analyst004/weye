@@ -55,6 +55,8 @@ cp ./conf/log4j.properties /etc/weye/log4j.properties
 [ $? -eq 0 ] || fail
 cp ./conf/web.xml /etc/weye/web.xml
 [ $? -eq 0 ] || fail
+cp ./conf/server.xml /etc/weye/server.xml
+[ $? -eq 0 ] || fail
 
 chkconfig weye on
 [ $? -eq 0 ] || fail

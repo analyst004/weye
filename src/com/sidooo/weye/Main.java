@@ -41,8 +41,20 @@ public class Main {
             return;
         }
 
+        String serverXmlPath = "/etc/weye/server.xml";
+        File serverXmlFile = new File(serverXmlPath);
+        if (!serverXmlFile.exists() || serverXmlFile.isDirectory()) {
+            logger.error("Can't find server.xml");
+            return;
+        }
+
         try {
-            UrlDatabase.init("10.1.1.2", 27017, "webdb" );
+            Document doc = Jsoup.parse(serverXmlFile, "UTF-8");
+            Element server = doc.select("server").first();
+            String ip = server.attr("ip");
+            String port = server.attr("port");
+            String dbname = server.attr("database");
+            UrlDatabase.init(ip, Integer.parseInt(port), dbname);
         } catch (Exception e) {
             logger.error("Connect Web Database Failed.");
             return;
