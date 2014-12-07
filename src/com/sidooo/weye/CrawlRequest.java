@@ -236,9 +236,11 @@ public class CrawlRequest {
 
 class WebList
 {
+    private Element target;
     private String html;
 
-    public  WebList(String html) {
+    public  WebList(Element target, String html) {
+        this.target = target;
         this.html = html;
     }
 
@@ -302,6 +304,10 @@ class WebList
 
         }
 
+        if (target.hasAttr("pagecount")) {
+            return Integer.parseInt(target.attr("pagecount"));
+        }
+
         return 0;
     }
 
@@ -310,7 +316,7 @@ class WebList
 class  WebPage
 {
     private String html;
-    private List<WebSelect> selectors;
+    private List<WebSelect> selectors = new ArrayList<WebSelect>();
 
     public WebPage(String html) {
         this.html = html;

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -12,6 +13,8 @@ import java.util.regex.Pattern;
 import net.sf.json.JSONObject;
 
 import org.apache.http.*;
+import org.apache.http.client.CookieStore;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -19,6 +22,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -48,6 +52,7 @@ public class Crawl implements Runnable {
     private boolean isEnabled = false;
     protected  DateTime lastRunTime = null;
     private CloseableHttpClient client = null;
+    private HttpClientContext context = null;
     //内置变量
     protected Map<String, String> variables = new HashMap<String, String>();
 
@@ -70,6 +75,7 @@ public class Crawl implements Runnable {
         }
 
         client = HttpClients.createDefault();
+        context = HttpClientContext.create();
 	}
 
     public static Crawl createInstance(Element conf) {
@@ -203,14 +209,31 @@ public class Crawl implements Runnable {
 //            client = HttpClients.createDefault();
 //        }
 
+        Elements cookieItems = target.select("cookie");
+        CookieStore cookieStore = context.getCookieStore();
+        if (cookieStore != null) {
+            for(Element cookieItem : cookieItems) {
+                String cookieName = cookieItem.attr("name");
+                cookieName = URLEncoder.encode(cookieName, "utf-8");
+                String cookieValue = cookieItem.text();
+                cookieValue = URLEncoder.encode(cookieValue, "utf-8");
+                BasicClientCookie cookie = new BasicClientCookie(cookieName, cookieValue);
+                cookieStore.addCookie(cookie);
+            }
+        }
+
         CloseableHttpResponse response = null;
         try {
-            response = client.execute(http);
+
+            response = client.execute(http, context);
             int retCode = response.getStatusLine().getStatusCode();
             if (retCode >= 300) {
                 logger.warn(response.getStatusLine().getReasonPhrase());
                 return null;
             }
+
+
+
             HttpEntity entity = response.getEntity();
             if (entity == null) {
                 logger.warn("Response contains no content.");
@@ -287,7 +310,7 @@ class BrowseCrawl extends Crawl  {
     private WebList getList() throws Exception {
         Element target = conf.select("list").first();
         String html = fetch(target);
-        return new WebList(html);
+        return new WebList(target, html);
     }
 
     private WebPage getPage(int pageId) throws Exception  {
@@ -326,7 +349,7 @@ class BrowseCrawl extends Crawl  {
         Element target = conf.select("item").first();
 
         //replace variables
-        String text = target.text();
+        String text = target.toString();
         text.replaceAll("\t", "");
         text.replaceAll("\n", "");
         text.replaceAll("\r", "");
