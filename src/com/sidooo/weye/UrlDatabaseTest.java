@@ -30,16 +30,6 @@ public class UrlDatabaseTest extends TestCase {
     @Test
     public void test1() throws  Exception
     {
-        UrlDatabase.init("10.1.1.2", 27017, "test");
-        for (int  i= 1; i<=10; i++) {
 
-            WebItem request = new WebItem();
-            request.setHost("http://test.com");
-            request.setPath("/test"+i);
-
-
-            UrlDatabase.write("test", request);
-
-        }
     }
 }

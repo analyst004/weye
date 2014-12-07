@@ -14,10 +14,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class CrawlTest { 
-	
+
+    private  Document doc;
 	@Before
 	public void setUp() throws Exception {
         UrlDatabase.init("10.1.1.5", 27017, "test" );
+        File xmlFile = new File("conf/web.xml");
+        doc = Jsoup.parse(xmlFile,"UTF-8");
 	}
 
 	@After
@@ -26,25 +29,22 @@ public class CrawlTest {
 
 	@Test
 	public void test1() throws Exception {
-
-        File xmlFile = new File("conf/web.xml");
-        Document doc = Jsoup.parse(xmlFile,"UTF-8");
         Element browse = doc.select("browse[id=WA110001G]").first();
-        Element web = browse.parent();
-
-        Crawl crawl = Crawl.createInstance(CrawlType.BROWSE, browse);
+        Crawl crawl = Crawl.createInstance(browse);
         crawl.run();
 	}
 
     @Test
     public void test2() throws Exception {
-
-        File xmlFile = new File("conf/web.xml");
-        Document doc = Jsoup.parse(xmlFile,"UTF-8");
         Element browse = doc.select("browse[id=WA110004G]").first();
-        Element web = browse.parent();
+        Crawl crawl = Crawl.createInstance(browse);
+        crawl.run();
+    }
 
-        Crawl crawl = Crawl.createInstance(CrawlType.BROWSE, browse);
+    @Test
+    public void test3() throws Exception {
+        Element browse = doc.select("browse[id=WA110043G]").first();
+        Crawl crawl = Crawl.createInstance(browse);
         crawl.run();
     }
 }

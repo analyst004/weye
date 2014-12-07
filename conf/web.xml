@@ -335,4 +335,21 @@
         </query>
     </web>
 
+    <web name="中国电信黄页">
+        <browse id="WA110043G" name="无锡企业名单" host="http://www.lososo.com" enable="true">
+            <login method="get" path="/"/>
+            <list  method="get" path="/search/-all/cxbyb1">
+                <referer>http://www.lososo.com/search/-all/cxbyb1</referer>
+            </list>
+            <page method="get" path="/search/-all/%pageid%/cxbyb1">
+                <referer>http://www.lososo.com/search/-all/cxbyb1</referer>
+                <select method="jquery" key="div.xiao_liebiao" attribute="onmouseover"/>
+                <select method="regular" key="*setShare(*,'(\w+)');$" index="1"/>
+            </page>
+            <item method="get" path="/company/%itemid%">
+                <referer>http://www.lososo.com/search/-all/%pageid%/cxbyb1</referer>
+            </item>
+        </browse>
+    </web>
+
 </root>

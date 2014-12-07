@@ -36,8 +36,7 @@ public class Main {
         try {
             PropertyConfigurator.configure("/etc/weye/log4j.properties");
         } catch (Exception e) {
-            logger.error("Load log4j Properties Failed.");
-            logger.error(e.getStackTrace().toString());
+            logger.error("Load log4j Properties Failed.", e);
             return;
         }
 
@@ -56,7 +55,7 @@ public class Main {
             String dbname = server.attr("database");
             UrlDatabase.init(ip, Integer.parseInt(port), dbname);
         } catch (Exception e) {
-            logger.error("Connect Web Database Failed.");
+            logger.error("Connect Web Database Failed.", e);
             return;
         }
 
@@ -80,7 +79,7 @@ public class Main {
 
                         String confType = conf.nodeName();
                         if ("browse".equals(confType)) {
-                            Crawl crawl = Crawl.createInstance(CrawlType.BROWSE, conf);
+                            Crawl crawl = Crawl.createInstance(conf);
                             crawlList.add(crawl);
                             new Thread(crawl).start();
                         } else if ("query".equals(confType)) {
@@ -98,7 +97,7 @@ public class Main {
                 Thread.sleep(99999999);
             }
         } catch (Exception e) {
-            logger.error(e.getStackTrace().toString());
+            logger.error("weye error", e);
         } finally {
             logger.warn("weye exit.");
         }

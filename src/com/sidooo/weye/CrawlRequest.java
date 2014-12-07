@@ -135,6 +135,10 @@ public class CrawlRequest {
         this.host = host;
     }
 
+    public String getHost() {
+        return this.host;
+    }
+
     public  void setPath(String path) {
         this.path = path;
     }
@@ -145,23 +149,6 @@ public class CrawlRequest {
 
     public String getLog() {
         return stream.getBuffer().toString();
-    }
-
-    public String getPath() {
-        String ret = path;
-        if (variables.containsKey("pageid")) {
-            ret = ret.replace("%pageid%", variables.get("pageid"));
-        }
-
-        if (variables.containsKey("itemid")) {
-            ret = ret.replace("%itemid%", variables.get("itemid"));
-        }
-
-        return ret;
-    }
-
-    public String getUrl() {
-        return host + getPath();
     }
 
     public DateTime getDate() {
@@ -239,50 +226,130 @@ public class CrawlRequest {
         stringParams.put(name, value);
     }
 
-    public String getMd5(){
-        try {
-            MessageDigest hash = MessageDigest.getInstance("MD5");
-            hash.update(host.toLowerCase().getBytes());
-            hash.update(getPath().toLowerCase().getBytes());
-            Set<String> keys = stringParams.keySet();
-            for (String key : keys) {
-                String value = stringParams.get(key);
-                if (value.charAt(0) == '$') {
-                    value = variables.get(value.substring(1));
+
+
+
+
+
+}
+
+
+class WebList
+{
+    private String html;
+
+    public  WebList(String html) {
+        this.html = html;
+    }
+
+    public int pageCount() {
+        Document doc = Jsoup.parse(html);
+        Element element = doc.getElementsContainingOwnText("尾页").first();
+        if (element != null ) {
+            //存在“尾页”的标签
+            if (element.hasAttr("onclick")) {
+                //<a href="javascript:void(0);" onclick="gotoPage(29170)">尾页</a>
+                String onclick = element.attr("onclick");
+                Pattern pattern = Pattern.compile("^\\w+\\((\\d+)\\)",Pattern.CASE_INSENSITIVE);
+                Matcher match = pattern.matcher(onclick);
+                if (match.find()) {
+                    String text = match.group(1);
+                    int pageCount = Integer.parseInt(text);
+                    return pageCount;
                 }
-                String text = key +"=" + value;
-                hash.update(text.getBytes());
-            }
-            keys = formParams.keySet();
-            for(String key : keys) {
-                String value = formParams.get(key);
-                if (value.charAt(0) == '$') {
-                    value = variables.get(value.substring(1));
-                }
-                String text = key +"=" + value;
-                hash.update(text.getBytes());
-            }
-            keys = queryParams.keySet();
-            for (String key: keys) {
-                String value = queryParams.get(key);
-                if (value.charAt(0) == '$') {
-                    value = variables.get(value.substring(1));
-                }
-                String text = key +"=" + value;
-                hash.update(text.getBytes());
             }
 
-            byte[] array = hash.digest();
-            StringBuffer buffer = new StringBuffer();
-            for(int i=0; i < array.length; i++)
-            {
-                buffer.append(Integer.toHexString((array[i] & 0xFF) | 0x100).substring(1,3));
+            if (element.hasAttr("href"))  {
+                //<a href="index_7654.htm">尾页</a>
+                String href = element.attr("href");
+                Pattern pattern = Pattern.compile("^index_(\\d+).htm$", Pattern.CASE_INSENSITIVE);
+                Matcher match = pattern.matcher(href);
+                if (match.find()) {
+                    String text = match.group(1);
+                    int pageCount = Integer.parseInt(text);
+                    return pageCount;
+                }
             }
-            return buffer.toString();
-        } catch (NoSuchAlgorithmException e) {
-            return null;
+
+        }  else {
+
+            Elements elements = doc.select("script");
+            for( Element script : elements) {
+
+                //<script>createPageHTML(7655,1,"index","htm");</script>
+                String text = script.html();
+                if (text.indexOf("createPageHTML")>= 0 ) {
+                    String[] items = text.split("\\W");
+                    int maxValue = 0;
+                    for(String item : items) {
+                        int value = 0;
+                        try {
+                            value = Integer.parseInt(item);
+                        } catch (Exception e){
+                            value = 0;
+                        }
+
+                        if (value > maxValue) {
+                            maxValue = value;
+                        }
+                    }
+
+                    if (maxValue > 0) {
+                        return maxValue;
+                    }
+                }
+            }
+
         }
+
+        return 0;
     }
+
+}
+
+class  WebPage
+{
+    private String html;
+    private List<WebSelect> selectors;
+
+    public WebPage(String html) {
+        this.html = html;
+    }
+
+    public  void addSelector(String method, String key, String index, String attribute) {
+        WebSelect selector = new WebSelect(method, key, index, attribute);
+        selectors.add(selector);
+    }
+
+    public String[] items() {
+
+        String[] matches = new String[]{html};
+
+        for(WebSelect select : selectors) {
+
+            String method = select.getMethod();
+            String key = select.getKey();
+            Integer index = select.getIndex();
+            String attribute = select.getAttribute();
+
+            if (method == null) {
+                return null;
+            } else if ("jquery".equals(method)) {
+                matches = jquery(matches, key, index, attribute);
+            } else if ("json".equals(method)){
+                matches = json(matches, key, index, attribute);
+            } else if ("regular".equals(method)) {
+                matches = regular(matches, key, index, attribute);
+            } else if ("xml".equals(method)) {
+                matches = xml(matches, key, index, attribute);
+            } else {
+                return null;
+            }
+        }
+
+        return matches;
+    }
+
 
     protected String[] xml(String[] texts, String key, Integer index, String attribute) {
 
@@ -422,417 +489,28 @@ public class CrawlRequest {
         return result.toArray(new String[0]);
     }
 
-    protected boolean fetch() throws Exception {
-
-        // prepare http request
-        HttpRequestBase http = null;
-        if ("get".equals(httpMehtod)) {
-            URL url = new URL(host);
-            URIBuilder uri = new URIBuilder();
-            uri.setScheme(url.getProtocol());
-            uri.setHost(url.getHost());
-            uri.setPort(url.getPort());
-            uri.setPath(getPath());
-            Set<String> paramNames = stringParams.keySet();
-            for (String paramName:paramNames) {
-                String paramValue = stringParams.get(paramName);
-                if (paramValue.charAt(0) == '$') {
-                    paramValue = variables.get(paramValue.substring(1));
-                }
-                uri.setParameter(paramName, paramValue);
-            }
-            http = new HttpGet(uri.build());
-        } else if ("post".equals(httpMehtod)) {
-            List<NameValuePair> form = new ArrayList<NameValuePair>();
-            Set<String> paramNames = formParams.keySet();
-            for (String paramName:paramNames) {
-                String paramValue = formParams.get(paramName);
-                if (paramValue.charAt(0) == '$') {
-                    paramValue = variables.get(paramValue.substring(1));
-                }
-                form.add(new BasicNameValuePair(paramName, paramValue));
-            }
-            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
-            HttpPost post = new HttpPost(getUrl());
-            post.setEntity(entity);
-            http = post;
-        } else {
-            throw new IllegalArgumentException("invalid method:" + httpMehtod);
-        }
-
-        if (referer != null) {
-            http.addHeader("Referer", referer);
-        }
-
-//		HttpEntity entity = null;
-//		UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, "UTF-8");
-        //httpMethod.addRequestHeader("ContentType","application/x-www-form-urlencoded;charset=GBK");
-
-        //prepare http cookies
-        CloseableHttpClient client;
-        if (cookies.size() > 0) {
-            RequestConfig config = RequestConfig.custom().setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
-            http.setConfig(config);
-
-            Set<String> cookieNames = cookies.keySet();
-            //CookieStore cookieStore = new BasicCookieStore();
-            for(String cookieName:cookieNames) {
-                String cookieValue = cookies.get(cookieName);
-                BasicClientCookie cookie = new BasicClientCookie(cookieName, cookieValue);
-               // cookieStore.addCookie(cookie);
-            }
-            //client = HttpClients.custom().setDefaultCookieStore(cookieStore);
-            client = HttpClients.createDefault();
-        } else {
-            client = HttpClients.createDefault();
-        }
-
-        CloseableHttpResponse response = null;
-        try {
-            response = client.execute(http);
-            int retCode = response.getStatusLine().getStatusCode();
-            if (retCode >= 300) {
-                logger.warn(response.getStatusLine().getReasonPhrase());
-                return false;
-            }
-            HttpEntity entity = response.getEntity();
-            if (entity == null) {
-                logger.warn("Response contains no content.");
-                return false;
-            }
-
-            ContentType contentType = ContentType.get(entity);
-            Charset charset = contentType.getCharset();
-            if (charset == null) {
-                charset = Charset.defaultCharset();
-            }
-
-            //解决中文乱码
-            InputStreamReader isr = new InputStreamReader(entity.getContent(), charset);
-            BufferedReader reader = new BufferedReader(isr);
-            StringBuilder out = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                out.append(line+"\r\n");
-            }
-            this.html = new String(out.toString().getBytes(), "UTF-8");
-
-
-            //this.html = new String(this.html.getBytes(charset), "UTF-8");
-
-            cookies.clear();
-            HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator("Set-Cookie"));
-            while(it.hasNext()) {
-                HeaderElement element = it.nextElement();
-                cookies.put(element.getName(), element.getValue());
-            }
-
-
-        } catch(Exception e) {
-            logger.fatal(e.getStackTrace().toString());
-            return false;
-        } finally {
-            if (response != null)
-                response.close();
-        }
-        logger.info("fetch Web Item succeed.");
-        return true;
-
-    }
-
 
 }
 
-class WebList extends CrawlRequest
+class WebItem
 {
-    public static WebList createInstance(String host, Element conf) throws Exception{
+    private String html;
+    private DateTime date;
 
-        WebList request = new WebList();
-        request.setHost(host);
-
-        Element childNode = conf.select("list").first();
-        request.logger.info(childNode.toString());
-        if (childNode.hasAttr("method")) {
-            String method = childNode.attr("method");
-            request.setHttpMethod(method);
-        }
-
-        if (childNode.hasAttr("path")) {
-            String path = childNode.attr("path");
-            request.setPath(path);
-        }
-
-        if (childNode.hasAttr("pagecount")) {
-            request.attr("pagecount", childNode.attr("pagecount"));
-        }
-
-        Elements childs = childNode.children();
-        for(Element child : childs) {
-            if (child.nodeName().equals("string")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addStringParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("query")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addQueryParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("form")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addFormParameter(paramName, paramValue);
-            }
-        }
-
-        request.logger.info("Parse Web List Configuration Succecced.");
-
-        return request;
+    public WebItem(String html) {
+        this.html = html;
+        this.date = new DateTime();
     }
 
-    public int exec() {
-
-        try {
-            if (fetch() ) {
-                // 分析页面， 获取页面总数
-                int pageCount = analysisPageCount(this.html);
-                this.attr("pagecount", Integer.toString(pageCount));
-                return pageCount;
-            } else {
-                return 0;
-            }
-        } catch (Exception e) {
-            return 0;
-        }
-
-
+    public Date date() {
+        return new Date(date.getMillis());
     }
 
-    private int analysisPageCount(String html) {
-        Document doc = Jsoup.parse(html);
-        Element element = doc.getElementsContainingOwnText("尾页").first();
-        if (element != null ) {
-            //存在“尾页”的标签
-            if (element.hasAttr("onclick")) {
-                //<a href="javascript:void(0);" onclick="gotoPage(29170)">尾页</a>
-                String onclick = element.attr("onclick");
-                Pattern pattern = Pattern.compile("^\\w+\\((\\d+)\\)",Pattern.CASE_INSENSITIVE);
-                Matcher match = pattern.matcher(onclick);
-                if (match.find()) {
-                    String text = match.group(1);
-                    int pageCount = Integer.parseInt(text);
-                    return pageCount;
-                }
-            }
-
-            if (element.hasAttr("href"))  {
-                //<a href="index_7654.htm">尾页</a>
-                String href = element.attr("href");
-                Pattern pattern = Pattern.compile("^index_(\\d+).htm$", Pattern.CASE_INSENSITIVE);
-                Matcher match = pattern.matcher(href);
-                if (match.find()) {
-                    String text = match.group(1);
-                    int pageCount = Integer.parseInt(text);
-                    return pageCount;
-                }
-            }
-
-        }  else {
-
-            Elements elements = doc.select("script");
-            for( Element script : elements) {
-
-                //<script>createPageHTML(7655,1,"index","htm");</script>
-                String text = script.html();
-                if (text.indexOf("createPageHTML")>= 0 ) {
-                    String[] items = text.split("\\W");
-                    int maxValue = 0;
-                    for(String item : items) {
-                        int value = 0;
-                        try {
-                            value = Integer.parseInt(item);
-                        } catch (Exception e){
-                            value = 0;
-                        }
-
-                        if (value > maxValue) {
-                            maxValue = value;
-                        }
-                    }
-
-                    if (maxValue > 0) {
-                        return maxValue;
-                    }
-                }
-            }
-
-        }
-
-        return 0;
-
+    public String html() {
+        return this.html;
     }
 
-}
 
-class  WebPage extends  CrawlRequest
-{
-
-    public static WebPage createInstance(String host, Element conf) {
-
-        WebPage request = new WebPage();
-
-        request.setHost(host);
-
-        Element childNode = conf.select("page").first();
-        request.logger.info(childNode.toString());
-
-        if (childNode.hasAttr("method")) {
-            request.setHttpMethod(childNode.attr("method"));
-        }
-
-        if (childNode.hasAttr("path")) {
-            request.setPath(childNode.attr("path"));
-        }
-
-        Elements childs = childNode.children();
-        for(Element child : childs) {
-            if (child.nodeName().equals("string")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addStringParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("query")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addQueryParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("form")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addFormParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("select")) {
-
-                String selectMethod = child.attr("method");
-                String selectKey = child.attr("key");
-                String selectIndex = null;
-                if (child.hasAttr("index")) {
-                    selectIndex = child.attr("index");
-                }
-
-                String selectAttribute = null;
-                if (child.hasAttr("attribute")) {
-                    selectAttribute = child.attr("attribute");
-                }
-                request.addSelect(selectMethod, selectKey, selectIndex, selectAttribute);
-            }
-        }
-        request.logger.info("Parse Web Page Configuration Succecced.");
-        return request;
-    }
-
-    public  String[] exec(int pageId) {
-        try {
-            this.attr("pageid", Integer.toString(pageId));
-            if (fetch() ) {
-                return select(this.html);
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public String[] select(String html) {
-
-        String[] matches = new String[]{html};
-
-        for(WebSelect select : webSelects) {
-
-            String method = select.getMethod();
-            String key = select.getKey();
-            Integer index = select.getIndex();
-            String attribute = select.getAttribute();
-
-            if (method == null) {
-                return null;
-            } else if ("jquery".equals(method)) {
-                matches = jquery(matches, key, index, attribute);
-            } else if ("json".equals(method)){
-                matches = json(matches, key, index, attribute);
-            } else if ("regular".equals(method)) {
-                matches = regular(matches, key, index, attribute);
-            } else if ("xml".equals(method)) {
-                matches = xml(matches, key, index, attribute);
-            } else {
-                return null;
-            }
-        }
-
-        return matches;
-    }
-
-}
-
-class WebItem extends  CrawlRequest
-{
-    public static WebItem createInstance(String host, Element conf) throws Exception {
-
-        WebItem request = new WebItem();
-
-        request.setHost(host);
-
-        Element childNode = conf.select("item").first();
-        request.logger.info(childNode.toString());
-        if (childNode.hasAttr("method")) {
-            request.setHttpMethod(childNode.attr("method"));
-        }
-
-        if (childNode.hasAttr("path")) {
-            request.setPath(childNode.attr("path"));
-        }
-
-        Elements childs = childNode.children();
-        for(Element child : childs) {
-            if (child.nodeName().equals("string")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addStringParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("query")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addQueryParameter(paramName, paramValue);
-            }
-
-            if (child.nodeName().equals("form")) {
-                String paramName = child.attr("name");
-                String paramValue = child.text();
-                request.addFormParameter(paramName, paramValue);
-            }
-
-        }
-
-        request.logger.info("Parse Web Item Configuration Succecced.");
-        return request;
-    }
-
-    public void exec(String itemId) {
-        try {
-            logger.info("itemid = "+itemId);
-            this.attr("itemid", itemId);
-            fetch();
-        } catch (Exception e) {
-            return;
-        }
-    }
 }
 
 class WebEntry extends CrawlRequest
@@ -890,12 +568,5 @@ class WebEntry extends CrawlRequest
         return request;
     }
 
-    public String[] exec() {
-        try {
-            fetch();
-            return null;
-        } catch (Exception e) {
-            return null;
-        }
-    }
+
 }

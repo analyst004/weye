@@ -4,6 +4,7 @@ import com.mongodb.*;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.jsoup.nodes.Element;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -54,67 +55,45 @@ public class UrlDatabase {
         }
     }
 
-    public static void write(String crawlId, WebItem item) throws Exception
+    public static void write(String crawlId, String target, WebItem item) throws Exception
     {
         DBCollection coll = getCollection(crawlId);
 
+        MessageDigest hash = MessageDigest.getInstance("MD5");
+        hash.update(target.toLowerCase().getBytes());
+        byte[] array = hash.digest();
+        StringBuffer buffer = new StringBuffer();
+        for(int i=0; i < array.length; i++)
+        {
+            buffer.append(Integer.toHexString((array[i] & 0xFF) | 0x100).substring(1,3));
+        }
+        String md5 = buffer.toString();
 
         BasicDBObject doc = new BasicDBObject();
-        doc.put("md5", item.getMd5());
-        doc.put("url", item.getUrl());
-
-        DateTimeFormatter parser = ISODateTimeFormat.dateTime();
-        Date date = new Date(item.getDate().getMillis());
-        doc.put("date", date);
-
-        BasicDBList string = new BasicDBList();
-        Map<String,String> params = item.getStringParams();
-        Set<String> keys = params.keySet();
-        for(String key:keys) {
-            String value = params.get(key);
-            string.add(new BasicDBObject(key, value));
-        }
-        doc.put("string", string);
-
-        BasicDBList query = new BasicDBList();
-        params = item.getQueryParams();
-        keys = params.keySet();
-        for(String key : keys) {
-            String value = params.get(key);
-            query.add(new BasicDBObject(key,value));
-        }
-        doc.put("query", query);
-
-        BasicDBList form = new BasicDBList();
-        params = item.getFormParams();
-        keys = params.keySet();
-        for(String key : keys) {
-            String value = params.get(key);
-            form.add(new BasicDBObject(key,value));
-        }
-        doc.put("form", form);
-
-        doc.put("log", item.getLog());
-        doc.put("text",  item.getHtml());
+        doc.put("md5", md5);
+        //DateTimeFormatter parser = ISODateTimeFormat.dateTime();
+        doc.put("date", item.date());
+        doc.put("target", target);
+        doc.put("text",  item.html());
         coll.insert(doc, WriteConcern.SAFE);
     }
 
-    public static DateTime exist(String crawlId, WebItem item) throws Exception
-    {
-        DBCollection coll = getCollection(crawlId);
-        try {
-            BasicDBObject query = new BasicDBObject();
-            query.put("md5", item.getMd5());
-            DBCursor cursor = coll.find(query).sort(new BasicDBObject("date", -1));
-            if (!cursor.hasNext()) {
-                return null;
-            } else {
-                DBObject last = cursor.next();
-                DateTime fetchTime = new DateTime(last.toMap().get("date"));
-                return fetchTime;
-            }
-        } finally {
-            coll.drop();
-        }
-    }
+//    public static DateTime exist(String crawlId, WebItem item) throws Exception
+//    {
+//        DBCollection coll = getCollection(crawlId);
+//        try {
+//            BasicDBObject query = new BasicDBObject();
+//            query.put("md5", item.getMd5());
+//            DBCursor cursor = coll.find(query).sort(new BasicDBObject("date", -1));
+//            if (!cursor.hasNext()) {
+//                return null;
+//            } else {
+//                DBObject last = cursor.next();
+//                DateTime fetchTime = new DateTime(last.toMap().get("date"));
+//                return fetchTime;
+//            }
+//        } finally {
+//            coll.drop();
+//        }
+//    }
 }
