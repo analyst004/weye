@@ -229,15 +229,13 @@ public class Crawl implements Runnable {
             int retCode = response.getStatusLine().getStatusCode();
             if (retCode >= 300) {
                 logger.warn(response.getStatusLine().getReasonPhrase());
-                return null;
+                throw new HttpException("RetCode = "+retCode);
             }
-
-
 
             HttpEntity entity = response.getEntity();
             if (entity == null) {
                 logger.warn("Response contains no content.");
-                return null;
+                throw new NoHttpResponseException("Response contains no content.");
             }
 
             ContentType contentType = ContentType.get(entity);
@@ -304,7 +302,9 @@ class BrowseCrawl extends Crawl  {
 
     private void login() throws Exception {
         Element target = conf.select("login").first();
-        fetch(target);
+        if (target != null) {
+            fetch(target);
+        }
     }
 
     private WebList getList() throws Exception {
@@ -350,9 +350,8 @@ class BrowseCrawl extends Crawl  {
 
         //replace variables
         String text = target.toString();
-        text.replaceAll("\t", "");
-        text.replaceAll("\n", "");
-        text.replaceAll("\r", "");
+        text = text.replaceAll("[\\\t\\\n\\\r]", "");
+        //text.replaceAll("\\r\\n", "");
         if (variables.containsKey("pageid")) {
             text = text.replace("%pageid%", variables.get("pageid"));
             text = text.replace("$pageid", variables.get("pageid"));
