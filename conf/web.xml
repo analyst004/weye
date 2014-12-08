@@ -343,7 +343,6 @@
                 <cookie name="cityname">无锡市</cookie>
             </list>
             <page method="get" path="/search/-all/%pageid%/cxbyb1">
-                <!--<referer>http://www.locoso.com/search/-all/cxbyb1</referer>-->
                 <select method="jquery" key="div.xiao_liebiao a[onclick]" attribute="href"/>
             </page>
             <item method="get" path="%itemid%"/>
