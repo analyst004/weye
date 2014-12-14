@@ -273,6 +273,17 @@
     <mapping directory="" vcs="Git" />
   </component>
   <component name="libraryTable">
+    <library name="asm-1.0.2">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/asm-1.0.2/asm-1.0.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/asm-1.0.2/asm-1.0.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/asm-1.0.2/asm-1.0.2-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="hamcrest-1.3">
       <CLASSES>
         <root url="file://$PROJECT_DIR$/lib/hamcrest-1.3" />
@@ -303,16 +314,14 @@
     </library>
     <library name="joda-time-2.4">
       <CLASSES>
-        <root url="file://$PROJECT_DIR$/lib/joda-time-2.4" />
-        <root url="file://$PROJECT_DIR$/lib/joda-time-2.4" />
+        <root url="jar://$PROJECT_DIR$/lib/joda-time-2.4/joda-time-2.4.jar!/" />
       </CLASSES>
-      <JAVADOC />
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/joda-time-2.4/joda-time-2.4-javadoc.jar!/" />
+      </JAVADOC>
       <SOURCES>
-        <root url="file://$PROJECT_DIR$/lib/joda-time-2.4" />
+        <root url="jar://$PROJECT_DIR$/lib/joda-time-2.4/joda-time-2.4-sources.jar!/" />
       </SOURCES>
-      <jarDirectory url="file://$PROJECT_DIR$/lib/joda-time-2.4" recursive="false" />
-      <jarDirectory url="file://$PROJECT_DIR$/lib/joda-time-2.4" recursive="false" />
-      <jarDirectory url="file://$PROJECT_DIR$/lib/joda-time-2.4" recursive="false" type="SOURCES" />
     </library>
     <library name="json-lib-2.4">
       <CLASSES>
@@ -322,6 +331,26 @@
       </CLASSES>
       <JAVADOC />
       <SOURCES />
+    </library>
+    <library name="json-path-1.2">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/json-path-1.2/json-path-1.2.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/json-path-1.2/json-path-1.2.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/json-path-1.2/json-path-1.2.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="json-smart-2.1.1">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/json-smart-2.1.1/json-smart-2.1.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/json-smart-2.1.1/json-smart-2.1.1-sources.jar!/" />
+      </SOURCES>
     </library>
     <library name="jsoup-1.8.1">
       <CLASSES>
@@ -343,19 +372,24 @@
     </library>
     <library name="log4j-1.2.17">
       <CLASSES>
-        <root url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" />
-        <root url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" />
+        <root url="jar://$PROJECT_DIR$/lib/apache-log4j-1.2.17/log4j-1.2.17.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
-      <jarDirectory url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" recursive="false" />
-      <jarDirectory url="file://$PROJECT_DIR$/lib/apache-log4j-1.2.17" recursive="false" />
     </library>
     <library name="mongodb-2.6.5">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/mongodb-2.6.5/mongo-java-driver-2.6.5-javadoc.jar!/" />
         <root url="jar://$PROJECT_DIR$/lib/mongodb-2.6.5/mongo-java-driver-2.6.5.jar!/" />
         <root url="jar://$PROJECT_DIR$/lib/mongodb-2.6.5/mongo-java-driver-2.6.5-sources.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="slf4j-1.7">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/slf4j-1.7.5/slf4j-api-1.7.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/slf4j-1.7.5/slf4j-log4j12-1.7.5.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

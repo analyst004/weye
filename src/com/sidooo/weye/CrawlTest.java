@@ -6,6 +6,7 @@ import java.io.File;
 
 import junit.framework.TestCase;
 
+import org.apache.log4j.PropertyConfigurator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,6 +22,8 @@ public class CrawlTest {
         UrlDatabase.init("10.1.1.5", 27017, "test" );
         File xmlFile = new File("conf/web.xml");
         doc = Jsoup.parse(xmlFile,"UTF-8");
+
+        PropertyConfigurator.configure("conf/log4j_for_test.properties");
 	}
 
 	@After
@@ -47,4 +50,12 @@ public class CrawlTest {
         Crawl crawl = Crawl.createInstance(browse);
         crawl.run();
     }
+
+    @Test
+    public void test4() throws Exception {
+        Element browse = doc.select("browse[id=WA120001G]").first();
+        Crawl crawl = Crawl.createInstance(browse);
+        crawl.run();
+    }
+
 }

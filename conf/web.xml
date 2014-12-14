@@ -4,21 +4,21 @@
         <browse id="WA110001G" name="全国法院失信被执行人名单(自然人)" host="http://shixin.court.gov.cn" enable="true">
             <list method="get"  path="/personMore.do"/>
             <page method="post" path="/personMore.do">
-                <form name="currentPage">$pageid</form>
+                <form name="currentPage">%pageid%</form>
                 <select method="jquery" key="table.Resultlist a[title]" attribute="id"/>
             </page>
             <item method="get" path="/detail">
-                <string name="id">$itemid</string>
+                <string name="id">%itemid%</string>
             </item>
         </browse>
         <browse id="WA110002G" name="全国法院失信被执行人名单(法人或其他组织)" host="http://shixin.court.gov.cn" enable="true">
             <list method="get" path="/unitMore.do"></list>
             <page method="post" path="/unitMore.do">
-                <form name="currentPage">$pageid</form>
+                <form name="currentPage">%pageid%</form>
                 <select method="jquery" key="table.Resultlist a[title]" attribute="id"/>
             </page>
             <item method="get" url="/detail">
-                <string name="id">$itemid</string>
+                <string name="id">%itemid%</string>
             </item>
         </browse>
         <query id="WA110003G" name="被执行人信息查询" host="http://zhixing.court.gov.cn" enable="false">
@@ -30,7 +30,7 @@
                     <form name="cardNum">?</form>
             </entry>
             <page method="post" path="/search/search">
-                    <form name="currentPage">$pageid</form>
+                    <form name="currentPage">%pageid%</form>
                     <form name="selectCourtId">1</form>
                     <form name="selectCourtArrange">1</form>
                     <form name="pname">?</form>
@@ -38,7 +38,7 @@
                     <select method="jquery" key="a.View" attribute="id"/>
             </page>
             <item method="get" path="/search/detail">
-                <string name="id">$itemid</string>
+                <string name="id">%itemid%</string>
             </item>
         </query>
         <browse id="WA110004G" name="裁判文书(民事案件)" host="http://www.court.gov.cn" enable="true">
@@ -88,19 +88,19 @@
     <web name="浙江信用网" host="http://www.zjcredit.gov.cn">
         <template name="person">
             <list method="get" path="/zjcreditweb/html/personList.jsp">
-                <string name="tid">$tableId</string>
+                <string name="tid">%tableId%</string>
             </list>
             <page method="post" url="/zjcreditweb/html/personProxy.jsp">
-                <query name="startrecord">($pageid-1)*20</query>
-                <query name="endrecord">$pageid*20</query>
+                <query name="startrecord">(%pageid%-1)*20</query>
+                <query name="endrecord">%pageid%*20</query>
                 <query name="perpage">20</query>
                 <query name="totalrecord" method="xml" key="span.default_pgSearchInfo" attribute="text">
                     <select method="digit" index="0"/>
                 </query>
-                <form name="id">$tableId</form>
+                <form name="id">%tableId%</form>
             </page>
             <item method="post" url="/zjcreditweb/html/personDetail.jsp">
-                <form name="tableId">$tableId</form>
+                <form name="tableId">%tableId%</form>
                 <form name="cId" method="javascript" attribute="dataStore">
                     <select method="split" key="$" index="1"/>
                 </form>
@@ -108,19 +108,19 @@
         </template>
         <template name="enterprise">
             <list method="get" url="/zjcreditweb/html/promptsList.jsp">
-                <string name="id">$tableId</string>
+                <string name="id">%tableId%</string>
             </list>
             <page method="post" url="/zjcreditweb/html/promptsProxy.jsp">
-                <query name="startrecord">($pageid-1)*20</query>
-                <query name="endrecord">$pageid*20</query>
+                <query name="startrecord">(%pageid%-1)*20</query>
+                <query name="endrecord">%pageid%*20</query>
                 <query name="perpage">20</query>
                 <query name="totalrecord" method="xml" key="span.default_pgSearchInfo" attribute="text">
                     <select method="digit" index="0"/>
                 </query>
-                <form name="id">$tableId</form>
+                <form name="id">%tableId%</form>
             </page>
             <item method="post" url="/zjcreditweb/html/promptsDetail.jsp">
-                <form name="tableId">$tableId</form>
+                <form name="tableId">%tableId%</form>
                 <form name="cId" method="javascript" attribute="dataStore">
                     <select method="split" key="$" index="1"/>
                 </form>
@@ -229,7 +229,7 @@
         <browse id="WA110037G" name="无锡房地产开发商名单" enable="false">
             <list pagecount="50"/>
             <page method="get" url="/ProvList.pub">
-                <query name="page">$pageid</query>
+                <query name="page">%pageid%</query>
             </page>
             <item method="get" url="/ProvInfo.pub">
                 <string name="prid" method="regular" key="^ProvInfo\.pub\?prid=(\d+)" index="0"/>
@@ -238,7 +238,7 @@
         <browse id="WA110038G" name="无锡房地产中介公司名单" host="http://pub.wxlife.cn" enable="false">
             <list method="get" url="/ProxyList.pub" pagecount="20" />
             <page method="get" url="/ProxyList.pub">
-                <query name="page">$pageid</query>
+                <query name="page">%pageid%</query>
             </page>
             <item name="proxyInfo" method="get" url="/ProxyInfo.pub">
                 <string name="pxid" method="regular" key="^ProxyInfo\.pub\?pxid=(\d+)" index="0"/>
@@ -256,7 +256,7 @@
             </login>
             <list method="get" url="/ResumeSearch" pagecount="12000"/>
             <page method="post" url="/ResumeSearch">
-                <form name="pageIndex">$pageid</form>
+                <form name="pageIndex">%pageid%</form>
             </page>
             <item method="get" url="/company/cvPreview.go">
                 <string name="resumeID" method="regular" key="^company/cvPreview\.go\?resumeID=(.+)" index="0"/>
@@ -277,7 +277,7 @@
                 </select>
             </entry>
             <item method="get" url="/baweb/show/sj/details.jsp">
-                <string name="reg_no">$itemid</string>
+                <string name="reg_no">%itemid%</string>
             </item>
         </query>
     </web>
@@ -287,13 +287,13 @@
             <prepare name="getcookie" method="get" path="/lz/etpsInfo.do?method=index"></prepare>
             <entry method="post" path="/lz/etpsInfo.do?method=doSearch">
                 <form name="searchType">1</form>
-                <form name="keyWords">$1</form>
+                <form name="keyWords">%1%</form>
                 <select method="xml" key="table.con a[onclick]" attribute="onclick">
                     <select method="regular" key="^viewDetail\('(.+)'\)$" index="0"></select>
                 </select>
             </entry>
             <item method="post" path="/lz/etpsInfo.do?method=viewDetail">
-                <form name="etpsId" >$itemid</form>
+                <form name="etpsId" >%itemid%</form>
                 <referer>http://www.sgs.gov.cn/lz/etpsInfo.do?method=doSearch</referer>
             </item>
         </query>
@@ -346,6 +346,76 @@
                 <select method="jquery" key="div.xiao_liebiao a[onclick]" attribute="href"/>
             </page>
             <item method="get" path="%itemid%"/>
+        </browse>
+    </web>
+
+    <web name="腾讯朋友网">
+        <browse id="WA120001G" name="江苏无锡籍人员名单" host="http://www.pengyou.com" enable="true">
+            <login method="get" path="http://ui.ptlogin2.pengyou.com/cgi-bin/login">
+                <string name="appid">15004601</string>
+                <string name="qlogin_jumpname"></string>
+                <string name="hide_title_bar">1</string>
+                <string name="s_url">http://www.pengyou.com/index.php?mod=login2&act=qqlogin</string>
+                <select name="login_sig" method="regular">g_login_sig=encodeURIComponent\(\"([a-zA-Z0-9*\-_]+)\"\);</select>
+            </login>
+            <login method="get" path="http://check.ptlogin2.pengyou.com/check">
+                <string name="pt_sea">1</string>
+                <string name="uin">24726263</string>
+                <string name="appid">15004601</string>
+                <string name="js_ver">10104</string>
+                <string name="js_type">0</string>
+                <string name="login_sig">%login_sig%</string>
+                <string name="r">0.4439548950677638</string>
+                <select name="vc" method="regular"  key="^ptui_checkVC\('(\d)','([A-Z!]{4})','([\\xa-f0-9]+)','([a-f0-9]+)'*\);$"></select>
+            </login>
+            <login method="get" path="http://ptlogin2.pengyou.com/login">
+                <string name="u">24726263</string>
+                <string name="p">
+                    <javascript file="comm.js">Encryption.getEncryption('ia3054IAN','%vc[2]%','%vc[1]%');</javascript>
+                </string>
+                <string name="verifycode">%vc[1]%</string>
+                <string name="aid">15004601</string>
+                <string name="u1">http://www.pengyou.com/index.php?mod=login2&act=qqlogin</string>
+                <string name="h">1</string>
+                <string name="ptredirect">1</string>
+                <string name="ptlang">2052</string>
+                <string name="from_ui">1</string>
+                <string name="login_sig">%login_sig%</string>
+                <string name="dumy"></string>
+                <string name="fp">loginerroralert</string>
+                <string name="action">2-19-74844</string>
+                <string name="mibao_css"></string>
+                <string name="t">1</string>
+                <string name="g">1</string>
+                <string name="js_type">0</string>
+                <string name="js_ver">10104</string>
+                <string name="pt_uistyle">0</string>
+                <string name="pt_randsalt">0</string>
+                <string name="pt_vcode_v1">0</string>
+                <string name="pt_verifysession_v1">%vc[3]%</string>
+                <select name="ptuiCB" method="regular" key="ptuiCB\('(\d)','\d','(.+)','\d',.+\);"></select>
+                <check var="ptuiCB[0]">0</check>
+            </login>
+            <list method="get" path=" http://search.pengyou.com/index.php" pagecount="200">
+                <string name="mod">search</string>
+                <string name="act">findperson</string>
+            </list>
+            <page method="post" path="http://search.pengyou.com/json.php" period="60">
+                <form name="mod">search</form>
+                <form name="act">people</form>
+                <form name="page">%pageid%</form>
+                <form name="entry">582</form>
+                <form name="g_tk">
+                    <javascript file="comm.js">getToken('$skey$')</javascript>
+                </form>
+                <select method="json" key="$.result.users[*].hash"></select>
+            </page>
+            <item method="get" path="http://profile.pengyou.com/index.php">
+                <string name="mod">profile</string>
+                <string name="act">info</string>
+                <string name="u">%itemid%</string>
+                <string name="adtag">from_profile_top_text</string>
+            </item>
         </browse>
     </web>
 

@@ -1,8 +1,6 @@
 package com.sidooo.weye;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -10,6 +8,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.jayway.jsonpath.JsonPath;
 import net.sf.json.JSONObject;
 
 import org.apache.http.*;
@@ -35,8 +34,11 @@ import org.joda.time.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.xml.datatype.Duration;
 
 public class Crawl implements Runnable {
@@ -88,6 +90,26 @@ public class Crawl implements Runnable {
         }
     }
 
+    protected String replaceVariables(String input) {
+        String output = input;
+        Set<String> varNames = variables.keySet();
+        for(String varName : varNames) {
+            output = output.replace("%"+varName+"%", variables.get(varName));
+        }
+
+        CookieStore store = this.context.getCookieStore();
+        if (store != null) {
+            List<Cookie> cookies = store.getCookies();
+            for(Cookie cookie : cookies) {
+                String name = cookie.getName();
+                String value = cookie.getValue();
+                output = output.replace("$"+name+"$", value);
+            }
+        }
+
+        return output;
+    }
+
     public String getId() {
         return conf.attr("id");
     }
@@ -136,30 +158,49 @@ public class Crawl implements Runnable {
         String path = null;
         if (target.hasAttr("path")) {
             path = target.attr("path");
-            if (variables.containsKey("pageid")) {
-                path = path.replace("%pageid%", variables.get("pageid"));
-            }
-
-            if (variables.containsKey("itemid")) {
-                path = path.replace("%itemid%", variables.get("itemid"));
-            }
+            path = replaceVariables(path);
         }
 
         // prepare http request
         HttpRequestBase http = null;
         if ("get".equals(httpMethod)) {
-            URL url = new URL(this.getHost());
             URIBuilder uri = new URIBuilder();
-            uri.setScheme(url.getProtocol());
-            uri.setHost(url.getHost());
-            uri.setPort(url.getPort());
-            uri.setPath(path);
+            if (path.charAt(0) != '/') {
+                //绝对路径
+                URL url = new URL(path);
+                uri.setScheme(url.getProtocol());
+                uri.setHost(url.getHost());
+                uri.setPort(url.getPort());
+                uri.setPath(url.getPath());
+            } else {
+                URL url = new URL(this.getHost());
+                uri.setScheme(url.getProtocol());
+                uri.setHost(url.getHost());
+                uri.setPort(url.getPort());
+                uri.setPath(path);
+            }
+
             Elements strings = target.select("string");
             for (Element string : strings) {
                 String paramName = string.attr("name");
-                String paramValue = string.text();
-                if (paramValue.charAt(0) == '$') {
-                    paramValue = variables.get(paramValue.substring(1));
+                String paramValue = string.ownText();
+                if (paramValue.length()>0) {
+                        paramValue = replaceVariables(paramValue);
+                } else {
+                    //没有参数的具体值, 可能是动态值
+                    Elements scripts = string.select("javascript");
+                    for(Element script : scripts ) {
+                        String jsFileName = script.attr("file");
+                        String jsText = script.text();
+                        jsText = replaceVariables(jsText);
+                        ScriptEngineManager sem = new ScriptEngineManager();
+                        ScriptEngine se = sem.getEngineByName("javascript");
+                        se.eval(new FileReader(new File("js/"+jsFileName)));
+
+                        Object t = se.eval(jsText);
+                        paramValue = t.toString();
+                    }
+
                 }
                 uri.setParameter(paramName, paramValue);
             }
@@ -169,14 +210,34 @@ public class Crawl implements Runnable {
             Elements params = target.select("form");
             for (Element param : params) {
                 String paramName = param.attr("name");
-                String paramValue = param.text();
-                if (paramValue.charAt(0) == '$') {
-                    paramValue = variables.get(paramValue.substring(1));
+                String paramValue = param.ownText();
+                if (paramValue.length()>0) {
+                    paramValue = replaceVariables(paramValue);
+                } else {
+                    //没有参数的具体值, 可能是动态值
+                    Elements scripts = param.select("javascript");
+                    for(Element script : scripts ) {
+                        String jsFileName = script.attr("file");
+                        String jsText = script.text();
+                        jsText = replaceVariables(jsText);
+                        ScriptEngineManager sem = new ScriptEngineManager();
+                        ScriptEngine se = sem.getEngineByName("javascript");
+                        se.eval(new FileReader(new File("js/"+jsFileName)));
+
+                        Object t = se.eval(jsText);
+                        paramValue = t.toString();
+                    }
                 }
+                paramValue = URLEncoder.encode(paramValue, "utf-8");
                 form.add(new BasicNameValuePair(paramName, paramValue));
             }
             UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
-            HttpPost post = new HttpPost(getHost() + path);
+            HttpPost post = null;
+            if (path.charAt(0) != '/') {
+                post = new HttpPost(path);
+            } else {
+                post = new HttpPost(getHost() + path);
+            }
             post.setEntity(entity);
             http = post;
         } else {
@@ -276,6 +337,158 @@ public class Crawl implements Runnable {
 
     }
 
+    protected String[] select(String[] input, String method, String key, Integer index, String attribute) {
+        String[] matches = null;
+
+        if (method == null) {
+            return null;
+        } else if ("jquery".equals(method)) {
+            matches = jquery(input, key, index, attribute);
+        } else if ("json".equals(method)){
+            matches = json(input, key, index, attribute);
+        } else if ("regular".equals(method)) {
+            matches = regular(input, key, index, attribute);
+        } else if ("xml".equals(method)) {
+            matches = xml(input, key, index, attribute);
+        } else {
+            return null;
+        }
+
+        return matches;
+    }
+
+    private String[] xml(String[] texts, String key, Integer index, String attribute) {
+
+        List<String> result = new ArrayList<String>();
+
+        for(String text : texts)  {
+            Document doc = Jsoup.parse(text, "", Parser.xmlParser());
+            Elements elements = doc.select(key);
+            if (elements == null || elements.size() <= 0) {
+                continue;
+            }
+
+            if (index != null) {
+                Element element = elements.get(index.intValue());
+                if (element == null) {
+                    continue;
+                }
+
+                if (attribute != null) {
+
+                    if ("text".equals(attribute)) {
+                        result.add(element.text());
+                    } else {
+                        result.add(element.attr(attribute));
+                    }
+                } else {
+
+                    result.add(element.html());
+                }
+            } else {
+                for(Element element : elements) {
+                    if (attribute != null) {
+                        result.add(element.attr(attribute));
+                    } else {
+                        result.add(element.outerHtml());
+                    }
+                }
+            }
+        }
+
+        return result.toArray(new String[0]);
+    }
+
+    private String[] jquery(String[] texts, String key, Integer index, String attribute) {
+
+        List<String> result = new ArrayList<String>();
+
+        for(String text:texts) {
+            Document doc = Jsoup.parse(text);
+
+            Elements elements = null;
+            if (key == null) {
+                elements = doc.children();
+            } else {
+                elements = doc.select(key);
+            }
+
+            if (elements == null || elements.size() <= 0) {
+                continue;
+            }
+
+
+            if (index != null) {
+                Element element = elements.get(index.intValue());
+                if (element == null) {
+                    continue;
+                }
+
+                if (attribute != null) {
+                    if ("text".equals(attribute)) {
+                        result.add(element.text());
+                    } else {
+                        result.add(element.attr(attribute));
+                    }
+                } else {
+                    result.add(element.outerHtml());
+                }
+            } else {
+                for(Element element : elements) {
+                    if (attribute != null) {
+                        if ("text".equals(attribute)) {
+                            result.add(element.text());
+                        } else {
+                            result.add(element.attr(attribute));
+                        }
+
+                    } else {
+                        result.add(element.outerHtml());
+                    }
+                }
+            }
+        }
+
+        return  new HashSet<String>(result).toArray(new String[0]);
+    }
+
+    private String[] json(String[] texts, String key, Integer index, String attribute)	{
+
+        List<String> result = new ArrayList<String>();
+
+        for(String text:texts) {
+            result = JsonPath.read(text, key);
+        }
+        return result.toArray(new String[0]);
+    }
+
+    private String[] regular(String[] texts, String key, Integer index, String attribute) {
+
+        List<String> result = new ArrayList<String>();
+
+        for (String text : texts) {
+            Pattern pattern = Pattern.compile(key);
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.find()) {
+                if (index != null) {
+                    if (index.intValue() > (matcher.groupCount() - 1) ) {
+                        continue;
+                    }
+                    result.add(matcher.group(index.intValue()+1));
+                } else {
+                    int groupCount = matcher.groupCount();
+                    for (int i=1; i<=groupCount; i++) {
+                        result.add(matcher.group(i));
+                    }
+                }
+            } else {
+                continue;
+            }
+        }
+
+        return result.toArray(new String[0]);
+    }
+
 }
 
 
@@ -300,11 +513,70 @@ class BrowseCrawl extends Crawl  {
         super(conf);
     }
 
-    private void login() throws Exception {
-        Element target = conf.select("login").first();
-        if (target != null) {
-            fetch(target);
+    private boolean login() throws Exception {
+        Elements targets = conf.select("login");
+        for (Element target : targets) {
+            String response = fetch(target);
+            Elements selectors = target.select("select");
+            String[] results = new String[]{response};
+            for(Element selector : selectors) {
+
+                String selectMethod = selector.attr("method");
+                String selectKey = null;
+                if (selector.hasAttr("key")) {
+                    selectKey = selector.attr("key");
+                } else {
+                    selectKey = selector.text();
+                }
+
+                Integer selectIndex = null;
+                if (selector.hasAttr("index")) {
+                    selectIndex = Integer.parseInt(selector.attr("index"));
+                }
+
+                String selectAttribute = null;
+                if (selector.hasAttr("attribute")) {
+                    selectAttribute = selector.attr("attribute");
+                }
+
+                results = select(results, selectMethod, selectKey, selectIndex, selectAttribute);
+                if (selector.hasAttr("name")) {
+                    String selectName = selector.attr("name");
+                    if (results.length > 1) {
+                        for(int i=0; i<results.length; i++) {
+                            variables.put(selectName+"["+i+"]", results[i]);
+                        }
+                    } else if (results.length == 1) {
+                        variables.put(selectName, results[0]);
+                    } else {
+
+                    }
+                }
+            }
+
+            Elements checks = target.select("check");
+            boolean checkResult = true;
+            for(Element check : checks) {
+                String varName = check.attr("var");
+                if (!variables.containsKey(varName)) {
+                    checkResult = false;
+                    break;
+                }
+
+                String actureValue = variables.get(varName);
+                String expectValue = check.text();
+                if (!actureValue.equals(expectValue)) {
+                    checkResult = false;
+                    break;
+                }
+            }
+
+            if (!checkResult) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     private WebList getList() throws Exception {
@@ -317,25 +589,39 @@ class BrowseCrawl extends Crawl  {
         variables.put("pageid",Integer.toString(pageId));
         Element target = conf.select("page").first();
         String html = fetch(target);
+
         WebPage page = new WebPage(html);
         Elements selectors = target.select("select");
-        for(Element selector : selectors) {
+        if (selectors.size() > 0) {
+            String[] results = new String[]{html};
+            for(Element selector : selectors) {
 
-            String selectMethod = selector.attr("method");
-            String selectKey = selector.attr("key");
-            String selectIndex = null;
-            if (selector.hasAttr("index")) {
-                selectIndex = selector.attr("index");
+                String selectMethod = selector.attr("method");
+                String selectKey = selector.attr("key");
+                Integer selectIndex = null;
+                if (selector.hasAttr("index")) {
+                    selectIndex = Integer.parseInt(selector.attr("index"));
+                }
+
+                String selectAttribute = null;
+                if (selector.hasAttr("attribute")) {
+                    selectAttribute = selector.attr("attribute");
+                }
+
+                results = select(results, selectMethod, selectKey, selectIndex, selectAttribute);
             }
-
-            String selectAttribute = null;
-            if (selector.hasAttr("attribute")) {
-                selectAttribute = selector.attr("attribute");
-            }
-
-            page.addSelector(selectMethod, selectKey, selectIndex, selectAttribute);
+            page.addItems(results);
         }
+
         return page;
+    }
+
+    private void checkPagePeriod() throws Exception {
+        Element target = conf.select("page").first();
+        if (target.hasAttr("period")) {
+            Integer period = Integer.parseInt(target.attr("period"));
+            Thread.sleep(period * 1000);
+        }
     }
 
     private WebItem getItem(String itemId) throws Exception {
@@ -352,15 +638,7 @@ class BrowseCrawl extends Crawl  {
         String text = target.toString();
         text = text.replaceAll("[\\\t\\\n\\\r]", "");
         //text.replaceAll("\\r\\n", "");
-        if (variables.containsKey("pageid")) {
-            text = text.replace("%pageid%", variables.get("pageid"));
-            text = text.replace("$pageid", variables.get("pageid"));
-        }
-
-        if (variables.containsKey("itemid")) {
-            text = text.replace("%itemid%", variables.get("itemid"));
-            text = text.replace("$itemid", variables.get("itemid"));
-        }
+        text = replaceVariables(text);
 
         UrlDatabase.write(this.getId(), text, item);
     }
@@ -390,10 +668,14 @@ class BrowseCrawl extends Crawl  {
             lastRunTime = new DateTime();
 
             try {
-                login();
-                logger.info("Web Login Succeed");
+                if (login()) {
+                    logger.info("Web Login Succeed");
+                } else {
+                    logger.info("Web Login Fail.");
+                    break;
+                }
             } catch (Exception e) {
-                logger.fatal("Web Login Fail.", e);
+                logger.fatal("Web Login Error.", e);
                 status = CrawlStatus.CLOSED;
                 return;
             }
@@ -418,11 +700,17 @@ class BrowseCrawl extends Crawl  {
                 if (!needContinue) {
                     break;
                 }
+
+
+
                 WebPage page = null;
                 try {
                     page = getPage(i);
                     logger.info("Fetch Web Page "+i+" Succeed.");
                     pageFailCount = 0;
+
+                    //检查页面获取间隔时间
+                    checkPagePeriod();
                 } catch (Exception e) {
                     logger.warn("Fetch Web Page Error.", e);
                     pageFailCount += 1;

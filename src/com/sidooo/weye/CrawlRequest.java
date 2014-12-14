@@ -316,184 +316,24 @@ class WebList
 class  WebPage
 {
     private String html;
-    private List<WebSelect> selectors = new ArrayList<WebSelect>();
+    private List<String> items = new ArrayList<String>();
 
     public WebPage(String html) {
         this.html = html;
     }
 
-    public  void addSelector(String method, String key, String index, String attribute) {
-        WebSelect selector = new WebSelect(method, key, index, attribute);
-        selectors.add(selector);
+    public void addItems(String[] items) {
+        for(String item: items) {
+            this.items.add(item);
+        }
     }
 
     public String[] items() {
-
-        String[] matches = new String[]{html};
-
-        for(WebSelect select : selectors) {
-
-            String method = select.getMethod();
-            String key = select.getKey();
-            Integer index = select.getIndex();
-            String attribute = select.getAttribute();
-
-            if (method == null) {
-                return null;
-            } else if ("jquery".equals(method)) {
-                matches = jquery(matches, key, index, attribute);
-            } else if ("json".equals(method)){
-                matches = json(matches, key, index, attribute);
-            } else if ("regular".equals(method)) {
-                matches = regular(matches, key, index, attribute);
-            } else if ("xml".equals(method)) {
-                matches = xml(matches, key, index, attribute);
-            } else {
-                return null;
-            }
-        }
-
-        return matches;
+        return this.items.toArray(new String[0]);
     }
 
 
-    protected String[] xml(String[] texts, String key, Integer index, String attribute) {
 
-        List<String> result = new ArrayList<String>();
-
-        for(String text : texts)  {
-            Document doc = Jsoup.parse(text, "", Parser.xmlParser());
-            Elements elements = doc.select(key);
-            if (elements == null || elements.size() <= 0) {
-                continue;
-            }
-
-            if (index != null) {
-                Element element = elements.get(index.intValue());
-                if (element == null) {
-                    continue;
-                }
-
-                if (attribute != null) {
-
-                    if ("text".equals(attribute)) {
-                        result.add(element.text());
-                    } else {
-                        result.add(element.attr(attribute));
-                    }
-                } else {
-
-                    result.add(element.html());
-                }
-            } else {
-                for(Element element : elements) {
-                    if (attribute != null) {
-                        result.add(element.attr(attribute));
-                    } else {
-                        result.add(element.outerHtml());
-                    }
-                }
-            }
-        }
-
-        return result.toArray(new String[0]);
-    }
-
-    protected String[] jquery(String[] texts, String key, Integer index, String attribute) {
-
-        List<String> result = new ArrayList<String>();
-
-        for(String text:texts) {
-            Document doc = Jsoup.parse(text);
-
-            Elements elements = null;
-            if (key == null) {
-                elements = doc.children();
-            } else {
-                elements = doc.select(key);
-            }
-
-            if (elements == null || elements.size() <= 0) {
-                continue;
-            }
-
-
-            if (index != null) {
-                Element element = elements.get(index.intValue());
-                if (element == null) {
-                    continue;
-                }
-
-                if (attribute != null) {
-                    if ("text".equals(attribute)) {
-                        result.add(element.text());
-                    } else {
-                        result.add(element.attr(attribute));
-                    }
-                } else {
-                    result.add(element.outerHtml());
-                }
-            } else {
-                for(Element element : elements) {
-                    if (attribute != null) {
-                        if ("text".equals(attribute)) {
-                            result.add(element.text());
-                        } else {
-                            result.add(element.attr(attribute));
-                        }
-
-                    } else {
-                        result.add(element.outerHtml());
-                    }
-                }
-            }
-        }
-
-        return  new HashSet<String>(result).toArray(new String[0]);
-    }
-
-    protected String[] json(String[] texts, String key, Integer index, String attribute)	{
-
-        List<String> result = new ArrayList<String>();
-
-        for(String text:texts) {
-            JSONObject json = JSONObject.fromObject(text);
-            if (".".equals(key)) {
-                result.add(text);
-            } else {
-                String value = json.getString(key);
-                result.add(value);
-            }
-        }
-        return result.toArray(new String[0]);
-    }
-
-    protected String[] regular(String[] texts, String key, Integer index, String attribute) {
-
-        List<String> result = new ArrayList<String>();
-
-        for (String text : texts) {
-            Pattern pattern = Pattern.compile(key);
-            Matcher matcher = pattern.matcher(text);
-            if (matcher.find()) {
-                if (index != null) {
-                    if (index.intValue() > (matcher.groupCount() - 1) ) {
-                        continue;
-                    }
-                    result.add(matcher.group(index.intValue()+1));
-                } else {
-                    int groupCount = matcher.groupCount();
-                    for (int i=1; i<=groupCount; i++) {
-                        result.add(matcher.group(i));
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-
-        return result.toArray(new String[0]);
-    }
 
 
 }
