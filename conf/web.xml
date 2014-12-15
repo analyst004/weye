@@ -351,6 +351,7 @@
 
     <web name="腾讯朋友网">
         <browse id="WA120001G" name="江苏无锡籍人员名单" host="http://www.pengyou.com" enable="true">
+            <account username="24726263" password="ia3054IAN"/>
             <login method="get" path="http://ui.ptlogin2.pengyou.com/cgi-bin/login">
                 <string name="appid">15004601</string>
                 <string name="qlogin_jumpname"></string>
@@ -360,7 +361,7 @@
             </login>
             <login method="get" path="http://check.ptlogin2.pengyou.com/check">
                 <string name="pt_sea">1</string>
-                <string name="uin">24726263</string>
+                <string name="uin">%username%</string>
                 <string name="appid">15004601</string>
                 <string name="js_ver">10104</string>
                 <string name="js_type">0</string>
@@ -371,7 +372,7 @@
             <login method="get" path="http://ptlogin2.pengyou.com/login">
                 <string name="u">24726263</string>
                 <string name="p">
-                    <javascript file="comm.js">Encryption.getEncryption('ia3054IAN','%vc[2]%','%vc[1]%');</javascript>
+                    <javascript file="comm.js">Encryption.getEncryption('%password%','%vc[2]%','%vc[1]%');</javascript>
                 </string>
                 <string name="verifycode">%vc[1]%</string>
                 <string name="aid">15004601</string>

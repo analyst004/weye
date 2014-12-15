@@ -1,6 +1,7 @@
 package com.sidooo.weye;
 
 import java.io.*;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -53,8 +54,8 @@ public class Crawl implements Runnable {
     private Thread thread = null;
     private boolean isEnabled = false;
     protected  DateTime lastRunTime = null;
-    private CloseableHttpClient client = null;
-    private HttpClientContext context = null;
+    protected CloseableHttpClient client = null;
+    protected HttpClientContext context = null;
     //内置变量
     protected Map<String, String> variables = new HashMap<String, String>();
 
@@ -75,9 +76,6 @@ public class Crawl implements Runnable {
         } else {
             logger = Logger.getLogger("UnkownCrawl");
         }
-
-        client = HttpClients.createDefault();
-        context = HttpClientContext.create();
 	}
 
     public static Crawl createInstance(Element conf) {
@@ -146,6 +144,11 @@ public class Crawl implements Runnable {
         int minutes = Minutes.minutesBetween(lastRunTime, new DateTime()).getMinutes();
         // 时间间隔24小时
         return minutes >= 1440;
+    }
+
+    protected void reset() {
+        client = HttpClients.createDefault();
+        context = HttpClientContext.create();
     }
 
     protected String fetch(Element target) throws Exception {
@@ -513,6 +516,16 @@ class BrowseCrawl extends Crawl  {
         super(conf);
     }
 
+    private void account() throws Exception {
+        Element account = conf.select("account").first();
+        if (account != null) {
+            String username = account.attr("username");
+            String password = account.attr("password");
+            variables.put("username", username);
+            variables.put("password", password);
+        }
+    }
+
     private boolean login() throws Exception {
         Elements targets = conf.select("login");
         for (Element target : targets) {
@@ -667,6 +680,16 @@ class BrowseCrawl extends Crawl  {
 
             lastRunTime = new DateTime();
 
+            reset();
+
+            try {
+                account();
+            } catch (Exception e) {
+                logger.fatal("Get Account Error.", e);
+                status = CrawlStatus.CLOSED;
+                return;
+            }
+
             try {
                 if (login()) {
                     logger.info("Web Login Succeed");
@@ -682,12 +705,27 @@ class BrowseCrawl extends Crawl  {
 
             //获取列表入口， 计算出总页数
             WebList list = null;
-            try {
-                list = getList();
-            } catch (Exception e) {
-                logger.fatal("Fetch Web List Error", e);
-                status = CrawlStatus.CLOSED;
-                return;
+            int listFailCount = 0;
+            while (listFailCount <= 3) {
+                try {
+                    list = getList();
+                    logger.info("Get Web List Succeed.");
+                    break;
+                } catch (SocketTimeoutException e) {
+                    listFailCount++;
+                    logger.warn("Get Web List Timeout, Retry "+listFailCount);
+                    //暂停10秒
+                    try {
+                        Thread.sleep(10000);
+                    } catch (Exception e2) {
+                        logger.warn("Sleep Fail", e2);
+                    }
+                    continue;
+                } catch (Exception e) {
+                    logger.fatal("Fetch Web List Error", e);
+                    status = CrawlStatus.CLOSED;
+                    return;
+                }
             }
 
             //分页获取
@@ -701,16 +739,36 @@ class BrowseCrawl extends Crawl  {
                     break;
                 }
 
-
+                if (i>1) {
+                    //检查页面获取间隔时间
+                    try {
+                        checkPagePeriod();
+                    } catch (Exception e) {
+                        logger.warn("Check Period Error", e);
+                    }
+                }
 
                 WebPage page = null;
                 try {
                     page = getPage(i);
                     logger.info("Fetch Web Page "+i+" Succeed.");
                     pageFailCount = 0;
+                } catch (SocketTimeoutException e) {
+                    try {
+                        page = getPage(i);
+                        logger.info("Retry Fetch Web Page "+i+" Succeed.");
+                        pageFailCount = 0;
+                    } catch (Exception e2) {
+                        logger.warn("Retry Fetch Web Page Error.", e2);
+                        pageFailCount += 1;
+                        if (pageFailCount > 4) {
+                            //如果连续5个页面获取失败， 则不再继续尝试获取剩余内容
+                            break;
+                        } else {
+                            continue;
+                        }
+                    }
 
-                    //检查页面获取间隔时间
-                    checkPagePeriod();
                 } catch (Exception e) {
                     logger.warn("Fetch Web Page Error.", e);
                     pageFailCount += 1;
@@ -745,10 +803,12 @@ class BrowseCrawl extends Crawl  {
                     WebItem item = null;
                     try {
                         item = getItem(itemid);
+                        logger.info("Get Web Item Succeed, Item: " + itemid);
                     } catch (Exception e) {
                         logger.warn("Get Web Item Fail.", e);
                         continue;
                     }
+
 
                     try {
                         saveItem(item);
