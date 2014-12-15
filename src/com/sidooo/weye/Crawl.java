@@ -47,8 +47,8 @@ public class Crawl implements Runnable {
 	protected Logger logger = null;
 	protected CrawlStatus status = CrawlStatus.CLOSED;
 	protected Element conf = null;
-    private int succCount = 0;               //爬取成功数量
-    private int failCount = 0;               //爬取失败数量
+    protected long succCount = 0;               //爬取成功数量
+    protected long failCount = 0;               //爬取失败数量
     protected String webDomain;
     private long executeTick = 0;           //爬虫工作总时间
     private Thread thread = null;
@@ -116,11 +116,27 @@ public class Crawl implements Runnable {
         return conf.attr("name");
     }
 
+    public String getWebName() {
+        return conf.parent().attr("name");
+    }
+
     public  String getHost() {
         return conf.attr("host");
     }
 
-    public int getCount() {
+    public Element getConf() {
+        return conf;
+    }
+
+    public long getSuccCount() {
+        return succCount;
+    }
+
+    public long getFailCount() {
+        return failCount;
+    }
+
+    public long getCount() {
         return succCount + failCount;
     }
 
@@ -688,6 +704,8 @@ class BrowseCrawl extends Crawl  {
                 logger.fatal("Get Account Error.", e);
                 status = CrawlStatus.CLOSED;
                 return;
+            } finally {
+                UrlDatabase.updateStatus(this);
             }
 
             try {
@@ -701,6 +719,8 @@ class BrowseCrawl extends Crawl  {
                 logger.fatal("Web Login Error.", e);
                 status = CrawlStatus.CLOSED;
                 return;
+            } finally {
+                UrlDatabase.updateStatus(this);
             }
 
             //获取列表入口， 计算出总页数
@@ -725,8 +745,11 @@ class BrowseCrawl extends Crawl  {
                     logger.fatal("Fetch Web List Error", e);
                     status = CrawlStatus.CLOSED;
                     return;
+                } finally {
+                    UrlDatabase.updateStatus(this);
                 }
             }
+
 
             //分页获取
             int pageFailCount = 0;
@@ -778,6 +801,8 @@ class BrowseCrawl extends Crawl  {
                     } else {
                         continue;
                     }
+                } finally {
+                    UrlDatabase.updateStatus(this);
                 }
 
                 String[] itemids = page.items();
@@ -803,10 +828,14 @@ class BrowseCrawl extends Crawl  {
                     WebItem item = null;
                     try {
                         item = getItem(itemid);
+                        succCount++;
                         logger.info("Get Web Item Succeed, Item: " + itemid);
                     } catch (Exception e) {
+                        failCount++;
                         logger.warn("Get Web Item Fail.", e);
                         continue;
+                    } finally {
+                        UrlDatabase.updateStatus(this);
                     }
 
 

@@ -55,6 +55,29 @@ public class UrlDatabase {
         }
     }
 
+    public static void updateStatus(Crawl crawl)  {
+        try {
+            DBCollection coll = getCollection("crawl_status");
+
+            BasicDBObject status = new BasicDBObject();
+            status.put("id", crawl.getId());
+            status.put("domain", crawl.getWebName());
+            status.put("name", crawl.getName());
+            Element conf = crawl.getConf();
+            String text = conf.toString();
+            status.put("conf", text);
+            status.put("succcount", crawl.getSuccCount());
+            status.put("failcount", crawl.getFailCount());
+
+            BasicDBObject query = new BasicDBObject();
+            query.put("id", crawl.getId());
+
+            coll.update(query, status, true, false);
+        } catch (Exception e) {
+
+        }
+    }
+
     public static void write(String crawlId, String target, WebItem item) throws Exception
     {
         DBCollection coll = getCollection(crawlId);
