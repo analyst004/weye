@@ -61,7 +61,5 @@ cp ./conf/server.xml /etc/weye/server.xml
 chkconfig weye on
 [ $? -eq 0 ] || fail
 
-service weye start
-
 pass
 

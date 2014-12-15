@@ -15,7 +15,7 @@ case $1 in
     start)
         echo "start ${NAME} ..."
         if [ ! -f $PID_FILE ]; then
-            nohup java -jar /usr/bin/weye.jar &
+            nohup java -jar /usr/bin/weye.jar 2>/dev/null &
             echo $! > $PID_FILE
             echo "${NAME} started ..."
         else
