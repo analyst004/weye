@@ -58,37 +58,6 @@
     <exclude name="**/?*.clj"/>
   </patternset>
   
-  <!-- JDK definitions -->
-  
-  <property name="jdk.bin.1.7" value="${jdk.home.1.7}/bin"/>
-  <path id="jdk.classpath.1.7">
-    <fileset dir="${jdk.home.1.7}">
-      <include name="jre/lib/charsets.jar"/>
-      <include name="jre/lib/deploy.jar"/>
-      <include name="jre/lib/javaws.jar"/>
-      <include name="jre/lib/jce.jar"/>
-      <include name="jre/lib/jfr.jar"/>
-      <include name="jre/lib/jfxrt.jar"/>
-      <include name="jre/lib/jsse.jar"/>
-      <include name="jre/lib/management-agent.jar"/>
-      <include name="jre/lib/plugin.jar"/>
-      <include name="jre/lib/resources.jar"/>
-      <include name="jre/lib/rt.jar"/>
-      <include name="jre/lib/ext/access-bridge-64.jar"/>
-      <include name="jre/lib/ext/dnsns.jar"/>
-      <include name="jre/lib/ext/jaccess.jar"/>
-      <include name="jre/lib/ext/localedata.jar"/>
-      <include name="jre/lib/ext/sunec.jar"/>
-      <include name="jre/lib/ext/sunjce_provider.jar"/>
-      <include name="jre/lib/ext/sunmscapi.jar"/>
-      <include name="jre/lib/ext/zipfs.jar"/>
-    </fileset>
-  </path>
-  
-  <property name="project.jdk.home" value="${jdk.home.1.7}"/>
-  <property name="project.jdk.bin" value="${jdk.bin.1.7}"/>
-  <property name="project.jdk.classpath" value="jdk.classpath.1.7"/>
-  
   
   <!-- Project Libraries -->
   
@@ -171,9 +140,6 @@
   <dirname property="module.weye.basedir" file="${ant.file}"/>
   
   
-  <property name="module.jdk.home.weye" value="${project.jdk.home}"/>
-  <property name="module.jdk.bin.weye" value="${project.jdk.bin}"/>
-  <property name="module.jdk.classpath.weye" value="${project.jdk.classpath}"/>
   
   <property name="compiler.args.weye" value="${compiler.args}"/>
   
@@ -185,7 +151,6 @@
   </path>
   
   <path id="weye.module.production.classpath">
-    <path refid="${module.jdk.classpath.weye}"/>
     <path refid="library.jsoup-1.8.1.classpath"/>
     <path refid="library.jedis-2.6.0.classpath"/>
     <path refid="library.mongodb-2.6.5.classpath"/>
@@ -221,7 +186,6 @@
   </path>
   
   <path id="weye.module.classpath">
-    <path refid="${module.jdk.classpath.weye}"/>
     <pathelement location="${weye.output.dir}"/>
     <path refid="library.jsoup-1.8.1.classpath"/>
     <path refid="library.jedis-2.6.0.classpath"/>
@@ -278,7 +242,7 @@
   
   <target name="compile.module.weye.production" description="Compile module weye; production classes">
     <mkdir dir="${weye.output.dir}"/>
-    <javac destdir="${weye.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.weye}/javac">
+    <javac destdir="${weye.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
       <compilerarg line="${compiler.args.weye}"/>
       <bootclasspath refid="weye.module.bootclasspath"/>
       <classpath refid="weye.module.production.classpath"/>
