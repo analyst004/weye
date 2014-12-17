@@ -37,29 +37,47 @@ done
 #stop weye service
 service weye stop
 
-tip "Install weye service ..."
+
 #setup daemon script
+tip "Install weye service ..."
 cp ./bin/daemon.sh /etc/init.d/weye
 [ $? -eq 0 ] || fail
+pass
+
+tip "Change model ..."
 chmod 755 /etc/init.d/weye
 [ $? -eq 0 ] || fail
+pass
 
 #setup weye jar file
+tip "Copy weye.jar ..."
 cp ./bin/weye.jar /usr/bin/weye.jar
 [ $? -eq 0 ] || fail
+pass
 
 #setup configuration
+tip "mkdir /etc/weye ..."
 mkdir -p /etc/weye
 [ $? -eq 0 ] || fail
+pass
+
+tip "Copy log4j.properties ..."
 cp ./conf/log4j.properties /etc/weye/log4j.properties
 [ $? -eq 0 ] || fail
+pass
+
+tip "Copy web.xml ..."
 cp ./conf/web.xml /etc/weye/web.xml
 [ $? -eq 0 ] || fail
+pass
+
+tip "Copy server.xml ..."
 cp ./conf/server.xml /etc/weye/server.xml
 [ $? -eq 0 ] || fail
+pass
 
+tip "Config weye server ..."
 chkconfig weye on
 [ $? -eq 0 ] || fail
-
 pass
 

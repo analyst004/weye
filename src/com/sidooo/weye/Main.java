@@ -10,6 +10,10 @@ import org.jsoup.select.Elements;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +25,59 @@ public class Main {
 	public static void usage() {
 		System.err.println("usage: weye.jar");
 	}
+
+    private static void testLogDatabase() throws Exception {
+
+        //驱动名称
+        String driver = "com.mysql.jdbc.Driver";
+
+        // URL指向要访问的数据库名scutcs
+        String url = "jdbc:mysql://10.1.1.2:3306/logdb";
+
+        // MySQL配置时的用户名
+        String user = "root";
+
+        // Java连接MySQL配置时的密码
+        String password = "";
+
+        Connection conn = null;
+        ResultSet rs = null;
+        try {
+            // 加载驱动程序
+            Class.forName(driver);
+
+            // 连续数据库
+            conn = DriverManager.getConnection(url, user, password);
+
+            if(!conn.isClosed())  {
+
+                // statement用来执行SQL语句
+                Statement statement = conn.createStatement();
+
+                // 要执行的SQL语句
+                String sql = "select COUNT(*) from loginfo";
+
+                rs = statement.executeQuery(sql);
+                System.out.println("-----------------");
+                System.out.println("执行结果如下所示:");
+                System.out.println("-----------------");
+                System.out.println(" 学号" + "\t" + " 姓名");
+                System.out.println("-----------------");
+                String name = null;
+                int logcount = rs.getInt(0);
+            }
+        } finally {
+
+            if (rs != null) {
+                rs.close();
+            }
+
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
 	
 	public static void main(String[] args) {
 
@@ -32,6 +89,8 @@ public class Main {
             logger.error("Can't find web.xml");
             return;
         }
+
+
 
         try {
             PropertyConfigurator.configure("/etc/weye/log4j.properties");
@@ -45,6 +104,13 @@ public class Main {
         File serverXmlFile = new File(serverXmlPath);
         if (!serverXmlFile.exists() || serverXmlFile.isDirectory()) {
             logger.error("Can't find server.xml");
+            return;
+        }
+
+        try {
+            testLogDatabase();
+        } catch (Exception e) {
+            logger.error("Connect Log Database Fail.", e);
             return;
         }
 
