@@ -64,7 +64,9 @@ public class Main {
                 System.out.println(" 学号" + "\t" + " 姓名");
                 System.out.println("-----------------");
                 String name = null;
-                int logcount = rs.getInt(0);
+                if (rs.next()) {
+                    int logcount = rs.getInt(0);
+                }
             }
         } finally {
 
