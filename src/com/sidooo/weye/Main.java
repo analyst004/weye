@@ -58,14 +58,10 @@ public class Main {
                 String sql = "select COUNT(*) from loginfo";
 
                 rs = statement.executeQuery(sql);
-                System.out.println("-----------------");
-                System.out.println("执行结果如下所示:");
-                System.out.println("-----------------");
-                System.out.println(" 学号" + "\t" + " 姓名");
-                System.out.println("-----------------");
+
                 String name = null;
                 if (rs.next()) {
-                    int logcount = rs.getInt(0);
+                    long logcount = rs.getLong(1);
                 }
             }
         } finally {
@@ -85,7 +81,20 @@ public class Main {
 
         Logger logger = Logger.getRootLogger();
 
-        String xmlPath = "/etc/weye/web.xml";
+        String xmlPath = null;
+        String serverXmlPath = null;
+        String logXmlPath = null;
+
+        String os = System.getProperty ("os.name");
+        if (os.indexOf("Win") >= 0) {
+            xmlPath = "conf/web.xml";
+            serverXmlPath = "conf/server.xml";
+            logXmlPath = "conf/log4j.properties";
+        } else {
+            xmlPath = "/etc/weye/web.xml";
+            serverXmlPath = "/etc/weye/server.xml";
+            logXmlPath = "/etc/weye/log4j.properties";
+        }
         File xmlFile = new File(xmlPath);
         if (!xmlFile.exists() || xmlFile.isDirectory()) {
             logger.error("Can't find web.xml");
@@ -95,14 +104,14 @@ public class Main {
 
 
         try {
-            PropertyConfigurator.configure("/etc/weye/log4j.properties");
+            PropertyConfigurator.configure(logXmlPath);
             logger.info("Load log4j Properties Succeed.");
         } catch (Exception e) {
             logger.error("Load log4j Properties Failed.", e);
             return;
         }
 
-        String serverXmlPath = "/etc/weye/server.xml";
+
         File serverXmlFile = new File(serverXmlPath);
         if (!serverXmlFile.exists() || serverXmlFile.isDirectory()) {
             logger.error("Can't find server.xml");
