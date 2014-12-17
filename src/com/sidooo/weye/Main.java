@@ -35,6 +35,7 @@ public class Main {
 
         try {
             PropertyConfigurator.configure("/etc/weye/log4j.properties");
+            logger.info("Load log4j Properties Succeed.");
         } catch (Exception e) {
             logger.error("Load log4j Properties Failed.", e);
             return;
@@ -59,7 +60,7 @@ public class Main {
             return;
         }
 
-        logger.error("Load web.xml.");
+        logger.info("Load web.xml.");
         try {
             Document doc = Jsoup.parse(xmlFile,"UTF-8");
 

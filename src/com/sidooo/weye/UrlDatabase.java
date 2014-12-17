@@ -1,6 +1,7 @@
 package com.sidooo.weye;
 
 import com.mongodb.*;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -27,6 +28,7 @@ public class UrlDatabase {
     private static String dbname;
     private static DB db;
 
+    private static Logger logger;
     public static void init(String host, int port, String dbname) throws  Exception{
         host = host;
         port = port;
@@ -44,6 +46,8 @@ public class UrlDatabase {
         if (db == null) {
             throw new ClassNotFoundException(dbname + " not found");
         }
+
+        logger = Logger.getRootLogger();
     }
 
     private static DBCollection getCollection(String crawlId) throws Exception{
@@ -74,6 +78,8 @@ public class UrlDatabase {
 
             coll.update(query, status, true, false);
         } catch (Exception e) {
+
+            logger.warn("Log Fail", e);
 
         }
     }
