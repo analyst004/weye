@@ -314,6 +314,7 @@
       <zipfileset src="${basedir}/lib/mongodb-2.6.5/mongo-java-driver-2.6.5.jar"/>
       <zipfileset src="${basedir}/lib/mongodb-2.6.5/mongo-java-driver-2.6.5-sources.jar"/>
       <zipfileset src="${basedir}/lib/apache-log4j-1.2.17/log4j-1.2.17.jar"/>
+      <zipfileset src="${basedir}/lib/mysql-5.1.34/mysql-connector-java-5.1.34-bin.jar"/>
     </jar>
     <copy file="${temp.jar.path.weye.jar}" tofile="${artifact.temp.output.weye:jar}/weye.jar"/>
   </target>
