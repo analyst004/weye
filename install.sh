@@ -37,6 +37,11 @@ done
 #stop weye service
 service weye stop
 
+#build weye
+tip "Build weye ..."
+ant
+[ $? -eq 0 ] || fail
+pass
 
 #setup daemon script
 tip "Install weye service ..."
