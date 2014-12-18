@@ -4,7 +4,8 @@ public enum CrawlStatus {
 
     RUNNING("RUNNING"),
     CLOSED("CLOSED"),
-    PENDING("PENDING");
+    PENDING("PENDING"),
+    IDLE("IDLE");
 
     private String type;
 

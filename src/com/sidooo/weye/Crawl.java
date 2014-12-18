@@ -144,6 +144,10 @@ public class Crawl implements Runnable {
         return status;
     }
 
+    public Date getLastRunTime() {
+        return new Date(lastRunTime.getMillis());
+    }
+
     public void enable(boolean value) {
         isEnabled = value;
     }
@@ -676,15 +680,17 @@ class BrowseCrawl extends Crawl  {
     public void run() {
 
         logger.info("BrowseCrawl "+ this.getId()+" is running");
-        status = CrawlStatus.RUNNING;
+        status = CrawlStatus.IDLE;
 
         while(true) {
 
             if (!enable()) {
+                status = CrawlStatus.CLOSED;
                 logger.warn("Crawl is disabled");
                 break;
             }
 
+            status = CrawlStatus.IDLE;
             if (!isNeedUpdate()) {
                 try {
                     Thread.sleep(60000);
@@ -694,16 +700,15 @@ class BrowseCrawl extends Crawl  {
                 continue;
             }
 
+            status = CrawlStatus.RUNNING;
             lastRunTime = new DateTime();
-
             reset();
 
             try {
                 account();
             } catch (Exception e) {
                 logger.fatal("Get Account Error.", e);
-                status = CrawlStatus.CLOSED;
-                return;
+                break;
             } finally {
                 UrlDatabase.updateStatus(this);
             }
@@ -847,8 +852,9 @@ class BrowseCrawl extends Crawl  {
                 }
             }
         }
+
         status = CrawlStatus.CLOSED;
-        logger.info("BrowseCrawl "+ this.getId()+" has exited");
+        logger.info("Crawl has exited");
 
     }
 }
