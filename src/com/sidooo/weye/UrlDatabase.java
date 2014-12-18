@@ -72,7 +72,7 @@ public class UrlDatabase {
             status.put("conf", text);
             status.put("succcount", crawl.getSuccCount());
             status.put("failcount", crawl.getFailCount());
-            status.put("status", crawl.getStatus());
+            status.put("status", crawl.getStatus().toString());
             status.put("lastruntime", crawl.getLastRunTime());
             BasicDBObject query = new BasicDBObject();
             query.put("id", crawl.getId());
