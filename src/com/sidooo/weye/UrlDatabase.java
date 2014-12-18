@@ -80,7 +80,7 @@ public class UrlDatabase {
             coll.update(query, status, true, false);
         } catch (Exception e) {
 
-            logger.warn("Log Fail", e);
+            logger.warn("Log Fail:"+e.toString());
 
         }
     }

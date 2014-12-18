@@ -90,14 +90,16 @@ public class Main {
             xmlPath = "conf/web.xml";
             serverXmlPath = "conf/server.xml";
             logXmlPath = "conf/log4j.properties";
+            System.setProperty("LogPath", "log");
         } else {
             xmlPath = "/etc/weye/web.xml";
             serverXmlPath = "/etc/weye/server.xml";
             logXmlPath = "/etc/weye/log4j.properties";
+            System.setProperty("LogPath", "/var/log");
         }
         File xmlFile = new File(xmlPath);
         if (!xmlFile.exists() || xmlFile.isDirectory()) {
-            logger.error("Can't find web.xml");
+            logger.error("Can't find web.xml, File not found");
             return;
         }
 
@@ -107,21 +109,21 @@ public class Main {
             PropertyConfigurator.configure(logXmlPath);
             logger.info("Load log4j Properties Succeed.");
         } catch (Exception e) {
-            logger.error("Load log4j Properties Failed.", e);
+            logger.error("Load log4j Properties Failed." +  e.toString());
             return;
         }
 
 
         File serverXmlFile = new File(serverXmlPath);
         if (!serverXmlFile.exists() || serverXmlFile.isDirectory()) {
-            logger.error("Can't find server.xml");
+            logger.error("Can't find server.xml, File not found.");
             return;
         }
 
         try {
             testLogDatabase();
         } catch (Exception e) {
-            logger.error("Connect Log Database Fail.", e);
+            logger.error("Connect Log Database Fail." + e.toString());
             return;
         }
 
@@ -133,7 +135,7 @@ public class Main {
             String dbname = server.attr("database");
             UrlDatabase.init(ip, Integer.parseInt(port), dbname);
         } catch (Exception e) {
-            logger.error("Connect Web Database Failed.", e);
+            logger.error("Connect Web Database Failed:" + e.toString());
             return;
         }
 
@@ -175,7 +177,7 @@ public class Main {
                 Thread.sleep(99999999);
             }
         } catch (Exception e) {
-            logger.error("weye error", e);
+            logger.error("weye error:" + e.toString());
         } finally {
             logger.warn("weye exit.");
         }

@@ -23,6 +23,7 @@ public class CrawlTest {
         File xmlFile = new File("conf/web.xml");
         doc = Jsoup.parse(xmlFile,"UTF-8");
 
+        System.setProperty("LogPath", "log");
         PropertyConfigurator.configure("conf/log4j_for_test.properties");
 	}
 
@@ -54,6 +55,13 @@ public class CrawlTest {
     @Test
     public void test4() throws Exception {
         Element browse = doc.select("browse[id=WA120001G]").first();
+        Crawl crawl = Crawl.createInstance(browse);
+        crawl.run();
+    }
+
+    @Test
+    public void test5() throws Exception {
+        Element browse = doc.select("browse[id=WA110002G]").first();
         Crawl crawl = Crawl.createInstance(browse);
         crawl.run();
     }

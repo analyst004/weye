@@ -679,7 +679,7 @@ class BrowseCrawl extends Crawl  {
     @Override
     public void run() {
 
-        logger.info("BrowseCrawl "+ this.getId()+" is running");
+        logger.info("Crawl is running");
         status = CrawlStatus.IDLE;
 
         while(true) {
@@ -707,7 +707,7 @@ class BrowseCrawl extends Crawl  {
             try {
                 account();
             } catch (Exception e) {
-                logger.fatal("Get Account Error.", e);
+                logger.error("Get Account Error:"+e.toString(), e);
                 break;
             } finally {
                 UrlDatabase.updateStatus(this);
@@ -721,9 +721,8 @@ class BrowseCrawl extends Crawl  {
                     break;
                 }
             } catch (Exception e) {
-                logger.fatal("Web Login Error.", e);
-                status = CrawlStatus.CLOSED;
-                return;
+                logger.error("Web Login Error:" + e.toString(), e);
+                break;
             } finally {
                 UrlDatabase.updateStatus(this);
             }
@@ -738,23 +737,22 @@ class BrowseCrawl extends Crawl  {
                     break;
                 } catch (SocketTimeoutException e) {
                     listFailCount++;
-                    logger.warn("Get Web List Timeout, Retry "+listFailCount);
+                    logger.warn("Get Web List Timeout:" + e.toString() + " Retry "+listFailCount, e);
                     //暂停10秒
                     try {
                         Thread.sleep(10000);
                     } catch (Exception e2) {
-                        logger.warn("Sleep Fail", e2);
+                        logger.warn("Sleep Fail:" + e2.toString(), e);
                     }
                     continue;
                 } catch (Exception e) {
-                    logger.fatal("Fetch Web List Error", e);
+                    logger.error("Fetch Web List Error:"+e.toString(), e);
                     status = CrawlStatus.CLOSED;
                     return;
                 } finally {
                     UrlDatabase.updateStatus(this);
                 }
             }
-
 
             //分页获取
             int pageFailCount = 0;
@@ -772,7 +770,7 @@ class BrowseCrawl extends Crawl  {
                     try {
                         checkPagePeriod();
                     } catch (Exception e) {
-                        logger.warn("Check Period Error", e);
+                        logger.warn("Check Period Error:" + e.toString());
                     }
                 }
 
@@ -787,7 +785,7 @@ class BrowseCrawl extends Crawl  {
                         logger.info("Retry Fetch Web Page "+i+" Succeed.");
                         pageFailCount = 0;
                     } catch (Exception e2) {
-                        logger.warn("Retry Fetch Web Page Error.", e2);
+                        logger.warn("Retry Fetch Web Page Error:"+e2.toString());
                         pageFailCount += 1;
                         if (pageFailCount > 4) {
                             //如果连续5个页面获取失败， 则不再继续尝试获取剩余内容
@@ -798,7 +796,7 @@ class BrowseCrawl extends Crawl  {
                     }
 
                 } catch (Exception e) {
-                    logger.warn("Fetch Web Page Error.", e);
+                    logger.warn("Fetch Web Page Error:"+e.toString());
                     pageFailCount += 1;
                     if (pageFailCount > 4) {
                         //如果连续5个页面获取失败， 则不再继续尝试获取剩余内容
@@ -837,7 +835,7 @@ class BrowseCrawl extends Crawl  {
                         logger.info("Get Web Item Succeed, Item: " + itemid);
                     } catch (Exception e) {
                         failCount++;
-                        logger.warn("Get Web Item Fail.", e);
+                        logger.warn("Get Web Item Fail:"+e.toString(), e);
                         continue;
                     } finally {
                         UrlDatabase.updateStatus(this);
@@ -847,7 +845,7 @@ class BrowseCrawl extends Crawl  {
                     try {
                         saveItem(item);
                     } catch (Exception e) {
-                        logger.warn("Save Web Item error.", e);
+                        logger.warn("Save Web Item error:"+e.toString(), e);
                     }
                 }
             }
